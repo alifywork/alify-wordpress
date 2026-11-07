@@ -27,8 +27,13 @@ function alify_enable_page_excerpts() {
 }
 add_action( 'init', 'alify_enable_page_excerpts' );
 
-/** Refresh registered CPT/taxonomy routes once when the theme is activated. */
-function alify_flush_rewrite_rules_on_switch() {
+/** Refresh rewrite rules once per theme version, after CPTs and taxonomies have registered. */
+function alify_maybe_flush_rewrite_rules() {
+	$version = defined( 'ALIFY_THEME_VERSION' ) ? ALIFY_THEME_VERSION : '';
+	if ( ! $version || $version === get_option( 'alify_rewrite_rules_version' ) ) {
+		return;
+	}
 	flush_rewrite_rules();
+	update_option( 'alify_rewrite_rules_version', $version, false );
 }
-add_action( 'after_switch_theme', 'alify_flush_rewrite_rules_on_switch' );
+add_action( 'wp_loaded', 'alify_maybe_flush_rewrite_rules', 99 );

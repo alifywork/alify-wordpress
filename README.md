@@ -7,7 +7,7 @@ A custom WordPress theme with the supplied Alify front-end converted into PHP te
 - Public CPTs: Services, Work, Case Studies, Industries, FAQs, Pricing, and Testimonials.
 - Each CPT has its own hierarchical category taxonomy and non-hierarchical tag taxonomy.
 - Blog uses WordPress core Posts, Categories, Tags, and single-post templates.
-- Primary and Footer navigation locations are registered and connected to the converted header/footer. The WordPress Primary Menu merges with the supplied desktop/mobile mega menus instead of removing them.
+- Primary and Footer navigation locations are registered and connected to the converted header/footer. Assigned WordPress menus render in the server-side fallback and the WordPress Primary Menu merges with the supplied desktop/mobile mega menus instead of removing them.
 - Forms, Form Templates, and private Form Entries are admin-managed post types.
 
 ## Front-end conversion
@@ -30,7 +30,7 @@ ACF Pro is optional for activation. When active it adds Theme Settings and field
 2. Go to **Appearance → Alify Setup** and click **Create / Repair Starter Pages & Content**. This creates the Pages, Services, Work, Case Studies, Industries, and Blog posts required by the source links, along with the source hero and main body as editable WordPress content and source-derived excerpts. It also copies supported raster artwork into the WordPress Media Library and assigns matching featured images where available; SVG illustrations, fonts, CSS, and JavaScript remain in the local theme bundle. It is safe to rerun and preserves matching records, existing body content, featured images, and editor-authored excerpts. Imported records retain a source-identity marker, so changing a starter record’s public slug does not make setup create a duplicate.
 3. Set the homepage and Posts page under **Settings → Reading** if they are not already selected.
 4. Assign Primary and Footer menus under **Appearance → Menus**. Without assigned menus, the supplied navigation remains as a fallback.
-5. Rewrite rules are flushed once on theme activation. If URLs return 404 later, save **Settings → Permalinks** to refresh them again.
+5. Rewrite rules refresh once per theme version after the theme's post types and taxonomies register. If URLs still return 404 (for example, because the server blocks `.htaccess` writes), save **Settings → Permalinks** to refresh them again.
 
 The importer extracts each source page hero and main body into the WordPress editor once, while preserving the converted PHP view as the default presentation. In the Alify Page Presentation box, choose **WordPress editor content** to publish your edited body, or leave **Original Alify design** selected. Rerunning setup never overwrites a non-empty body or excerpt. ACF Page Sections remain available as a structured alternative, and dynamic archive cards display editable excerpts.
 

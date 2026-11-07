@@ -96,16 +96,27 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  document.querySelectorAll("form[data-inquiry-form]").forEach((form) => {
-    const dialog = document.querySelector("[data-inquiry-review]");
-    if (dialog) {
-      dialog.querySelectorAll("[data-review-edit]").forEach((button) => button.addEventListener("click", () => dialog.close()));
-      dialog.addEventListener("click", (event) => {
-        if (event.target === dialog) dialog.close();
-      });
-      dialog.querySelector("[data-review-confirm]").addEventListener("click", () => {
+  const reviewDialog = document.querySelector("[data-inquiry-review]");
+  let activeInquiryForm = null;
+  if (reviewDialog) {
+    reviewDialog.querySelectorAll("[data-review-edit]").forEach((button) => button.addEventListener("click", () => reviewDialog.close()));
+    reviewDialog.addEventListener("click", (event) => {
+      if (event.target === reviewDialog) reviewDialog.close();
+    });
+    reviewDialog.addEventListener("close", () => {
+      activeInquiryForm = null;
+    });
+    const confirmButton = reviewDialog.querySelector("[data-review-confirm]");
+    if (confirmButton) {
+      confirmButton.addEventListener("click", () => {
+        const form = activeInquiryForm;
+        if (!form) {
+          reviewDialog.close();
+          return;
+        }
         const reviewUrl = form.dataset.reviewUrl;
-        dialog.close();
+        activeInquiryForm = null;
+        reviewDialog.close();
         if (form.dataset.serverSubmit === "true") {
           HTMLFormElement.prototype.submit.call(form);
           return;
@@ -113,7 +124,9 @@ document.addEventListener("DOMContentLoaded", () => {
         if (reviewUrl) window.location.href = reviewUrl;
       });
     }
+  }
 
+  document.querySelectorAll("form[data-inquiry-form]").forEach((form) => {
     form.addEventListener("submit", (event) => {
       event.preventDefault();
       if (!form.reportValidity()) return;
@@ -133,14 +146,15 @@ document.addEventListener("DOMContentLoaded", () => {
       const reviewUrl = form.dataset.serverSubmit === "true"
         ? ""
         : `mailto:${contactEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-      if (!dialog) {
+      const content = reviewDialog && reviewDialog.querySelector("[data-review-content]");
+      if (!reviewDialog || !content || typeof reviewDialog.showModal !== "function") {
         if (form.dataset.serverSubmit === "true") HTMLFormElement.prototype.submit.call(form);
         else window.location.href = reviewUrl;
         return;
       }
 
       form.dataset.reviewUrl = reviewUrl;
-      const content = dialog.querySelector("[data-review-content]");
+      activeInquiryForm = form;
       content.replaceChildren();
       const grouped = new Map();
       for (const [key, value] of data.entries()) {
@@ -158,7 +172,7 @@ document.addEventListener("DOMContentLoaded", () => {
         row.append(term, detail);
         content.append(row);
       });
-      dialog.showModal();
+      reviewDialog.showModal();
     });
     // The original homepage bundle has a mailto-only inquiry listener. The server
     // handler above owns this form, so remove its marker before that bundle scans.

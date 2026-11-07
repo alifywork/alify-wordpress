@@ -7,7 +7,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'ALIFY_THEME_VERSION', '1.0.0' );
+define( 'ALIFY_THEME_VERSION', '1.0.1' );
 define( 'ALIFY_THEME_DIR', get_template_directory() );
 define( 'ALIFY_THEME_URI', get_template_directory_uri() );
 

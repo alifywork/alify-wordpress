@@ -6,11 +6,18 @@ defined( 'ABSPATH' ) || exit;
 <site-footer>
 	<footer class="alify-nojs-footer">
 		<p><?php echo esc_html( sprintf( __( '© %1$s Alify. All rights reserved.', 'alify' ), date_i18n( 'Y' ) ) ); ?></p>
-		<nav aria-label="<?php esc_attr_e( 'Footer navigation', 'alify' ); ?>">
-			<a href="<?php echo esc_url( alify_source_url( 'privacy-policy' ) ); ?>"><?php esc_html_e( 'Privacy Policy', 'alify' ); ?></a>
-			<a href="<?php echo esc_url( alify_source_url( 'terms-and-conditions' ) ); ?>"><?php esc_html_e( 'Terms & Conditions', 'alify' ); ?></a>
-			<a href="<?php echo esc_url( alify_source_url( 'cookie-policy' ) ); ?>"><?php esc_html_e( 'Cookie Policy', 'alify' ); ?></a>
-		</nav>
+		<?php
+		wp_nav_menu(
+			array(
+				'theme_location'      => 'footer',
+				'container'           => 'nav',
+				'container_aria_label' => __( 'Footer navigation', 'alify' ),
+				'menu_class'          => 'alify-nojs-footer__menu',
+				'depth'               => 1,
+				'fallback_cb'         => 'alify_nojs_footer_menu_fallback',
+			)
+		);
+		?>
 		<?php
 		$nojs_contact_email_value = function_exists( 'get_field' ) ? get_field( 'contact_email', 'option' ) : '';
 		$nojs_contact_email = is_scalar( $nojs_contact_email_value ) ? sanitize_email( (string) $nojs_contact_email_value ) : '';

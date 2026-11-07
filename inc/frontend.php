@@ -8,6 +8,39 @@ function alify_source_assets_uri() {
 	return trailingslashit( ALIFY_THEME_URI ) . 'frontend-source/assets';
 }
 
+/** Return an escaped primary-menu list when no WordPress menu is assigned. */
+function alify_nojs_primary_menu_fallback( $args = array() ) {
+	$links = array(
+		array( __( 'Home', 'alify' ), home_url( '/' ) ),
+		array( __( 'About', 'alify' ), alify_source_url( 'about' ) ),
+		array( __( 'Services', 'alify' ), alify_source_url( 'services' ) ),
+		array( __( 'Work', 'alify' ), alify_source_url( 'projects' ) ),
+		array( __( 'Blog', 'alify' ), alify_source_url( 'blog' ) ),
+		array( __( 'Contact', 'alify' ), alify_source_url( 'contact' ) ),
+	);
+	$items = '';
+	foreach ( $links as $link ) {
+		$items .= '<li><a href="' . esc_url( $link[1] ) . '">' . esc_html( $link[0] ) . '</a></li>';
+	}
+	$class = is_object( $args ) && isset( $args->menu_class ) ? $args->menu_class : 'alify-nojs-header__menu';
+	return '<ul class="' . esc_attr( $class ) . '">' . $items . '</ul>';
+}
+
+/** Return an escaped footer-menu list when no WordPress footer menu is assigned. */
+function alify_nojs_footer_menu_fallback( $args = array() ) {
+	$links = array(
+		array( __( 'Privacy Policy', 'alify' ), alify_source_url( 'privacy-policy' ) ),
+		array( __( 'Terms & Conditions', 'alify' ), alify_source_url( 'terms-and-conditions' ) ),
+		array( __( 'Cookie Policy', 'alify' ), alify_source_url( 'cookie-policy' ) ),
+	);
+	$items = '';
+	foreach ( $links as $link ) {
+		$items .= '<li><a href="' . esc_url( $link[1] ) . '">' . esc_html( $link[0] ) . '</a></li>';
+	}
+	$class = is_object( $args ) && isset( $args->menu_class ) ? $args->menu_class : 'alify-nojs-footer__menu';
+	return '<ul class="' . esc_attr( $class ) . '">' . $items . '</ul>';
+}
+
 /** Render an accessible server-side fallback inside the client-enhanced page hero. */
 function alify_page_hero_fallback_markup( $eyebrow, $title, $description, $background = 'neon-lines-01.webp', $variant = '' ) {
 	$background = is_string( $background ) && preg_match( '/^neon-lines-(?:0[1-9]|1[0-4])\\.webp$/', $background ) ? $background : 'neon-lines-01.webp';

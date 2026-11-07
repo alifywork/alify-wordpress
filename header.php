@@ -15,15 +15,17 @@ defined( 'ABSPATH' ) || exit;
 <site-header>
 	<header class="alify-nojs-header">
 		<a class="alify-nojs-header__brand" href="<?php echo esc_url( home_url( '/' ) ); ?>">ALIFY</a>
-		<nav aria-label="<?php esc_attr_e( 'Primary navigation', 'alify' ); ?>">
-			<ul>
-				<li><a href="<?php echo esc_url( home_url( '/' ) ); ?>"><?php esc_html_e( 'Home', 'alify' ); ?></a></li>
-				<li><a href="<?php echo esc_url( alify_source_url( 'about' ) ); ?>"><?php esc_html_e( 'About', 'alify' ); ?></a></li>
-				<li><a href="<?php echo esc_url( alify_source_url( 'services' ) ); ?>"><?php esc_html_e( 'Services', 'alify' ); ?></a></li>
-				<li><a href="<?php echo esc_url( alify_source_url( 'projects' ) ); ?>"><?php esc_html_e( 'Work', 'alify' ); ?></a></li>
-				<li><a href="<?php echo esc_url( alify_source_url( 'blog' ) ); ?>"><?php esc_html_e( 'Blog', 'alify' ); ?></a></li>
-				<li><a href="<?php echo esc_url( alify_source_url( 'contact' ) ); ?>"><?php esc_html_e( 'Contact', 'alify' ); ?></a></li>
-			</ul>
-		</nav>
+		<?php
+		wp_nav_menu(
+			array(
+				'theme_location'      => 'primary',
+				'container'           => 'nav',
+				'container_aria_label' => __( 'Primary navigation', 'alify' ),
+				'menu_class'          => 'alify-nojs-header__menu',
+				'depth'               => 1,
+				'fallback_cb'         => 'alify_nojs_primary_menu_fallback',
+			)
+		);
+		?>
 	</header>
 </site-header>
