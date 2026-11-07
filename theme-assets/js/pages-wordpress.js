@@ -3,6 +3,16 @@
 document.addEventListener("DOMContentLoaded", () => {
   const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
+  document.querySelectorAll("fieldset[data-alify-required-group]").forEach((group) => {
+    const firstOption = group.querySelector('input[type="checkbox"]');
+    if (!firstOption) return;
+    const validateGroup = () => {
+      firstOption.setCustomValidity(group.querySelector('input[type="checkbox"]:checked') ? "" : "Please select at least one option.");
+    };
+    validateGroup();
+    group.addEventListener("change", validateGroup);
+  });
+
   document.querySelectorAll("[data-filter-group]").forEach((group) => {
     const targetSelector = group.dataset.filterGroup;
     const target = document.querySelector(targetSelector);
@@ -119,7 +129,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const subject = `Project inquiry — ${data.get("name") || "Website"}`;
       const body = `Hello Alify,\n\n${lines.join("\n")}\n\nI would like to discuss this project with you.`;
-      const reviewUrl = `mailto:hello@alify.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+      const contactEmail = (window.AlifyTheme && window.AlifyTheme.contactEmail) || "hello@alify.com";
+      const reviewUrl = form.dataset.serverSubmit === "true"
+        ? ""
+        : `mailto:${contactEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
       if (!dialog) {
         if (form.dataset.serverSubmit === "true") HTMLFormElement.prototype.submit.call(form);
         else window.location.href = reviewUrl;
@@ -147,6 +160,11 @@ document.addEventListener("DOMContentLoaded", () => {
       });
       dialog.showModal();
     });
+    // The original homepage bundle has a mailto-only inquiry listener. The server
+    // handler above owns this form, so remove its marker before that bundle scans.
+    if (form.dataset.serverSubmit === "true" && form.closest(".home-inquiry")) {
+      form.removeAttribute("data-inquiry-form");
+    }
   });
 
   if (reducedMotion || !window.gsap || !window.ScrollTrigger) return;

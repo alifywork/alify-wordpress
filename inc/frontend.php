@@ -24,6 +24,46 @@ function alify_normalize_social_link( $row ) {
 	);
 }
 
+/** Print a useful fallback description when no SEO plugin owns the document head. */
+function alify_output_meta_description() {
+	if ( defined( 'WPSEO_VERSION' ) || defined( 'RANK_MATH_VERSION' ) || defined( 'AIOSEO_VERSION' ) || defined( 'SEOPRESS_VERSION' ) || defined( 'THE_SEO_FRAMEWORK_VERSION' ) ) {
+		return;
+	}
+	if ( is_search() || is_404() ) {
+		return;
+	}
+
+	$description = '';
+	if ( is_singular() ) {
+		$post_id     = get_queried_object_id();
+		$description = trim( (string) get_post_field( 'post_excerpt', $post_id ) );
+		if ( ! $description && function_exists( 'alify_current_source_view' ) && function_exists( 'alify_get_source_excerpt' ) ) {
+			$source_view = alify_current_source_view();
+			if ( $source_view ) {
+				$description = alify_get_source_excerpt( $source_view );
+			}
+		}
+		if ( ! $description && function_exists( 'get_field' ) ) {
+			$description = (string) get_field( 'hero_description', $post_id );
+		}
+	} elseif ( is_category() || is_tag() || is_tax() ) {
+		$description = term_description();
+	} elseif ( is_post_type_archive() || is_home() ) {
+		$description = function_exists( 'get_field' ) ? (string) get_field( 'archive_description', 'option' ) : '';
+		if ( ! $description && is_home() ) {
+			$description = get_bloginfo( 'description' );
+		}
+	} elseif ( is_front_page() ) {
+		$description = get_bloginfo( 'description' );
+	}
+
+	$description = wp_trim_words( sanitize_text_field( wp_strip_all_tags( $description ) ), 32, '' );
+	if ( $description ) {
+		echo '<meta name="description" content="' . esc_attr( $description ) . '">' . "\n";
+	}
+}
+add_action( 'wp_head', 'alify_output_meta_description', 2 );
+
 /** Enqueue the locally bundled design system; no external asset CDN is used. */
 function alify_enqueue_frontend_assets() {
 	$base = alify_source_assets_uri();
@@ -56,6 +96,19 @@ function alify_enqueue_frontend_assets() {
 		);
 	}
 
+	$load_home_script = is_front_page();
+	if ( $load_home_script && is_singular() ) {
+		$front_id   = get_queried_object_id();
+		$mode       = get_post_meta( $front_id, '_alify_content_mode', true );
+		$content    = trim( (string) get_post_field( 'post_content', $front_id ) );
+		$imported   = get_post_meta( $front_id, '_alify_source_content_imported', true );
+		$has_custom_content = '' !== $content && ( 'content' === $mode || ( ! $imported && 'source' !== $mode ) );
+		$has_builder_content = function_exists( 'get_field' ) && ! empty( get_field( 'page_sections', $front_id ) );
+		if ( $has_custom_content || $has_builder_content ) {
+			$load_home_script = false;
+		}
+	}
+
 	$js_files = array(
 		'gsap'          => array( 'gsap/gsap.min.js', array() ),
 		'scrolltrigger' => array( 'gsap/ScrollTrigger.min.js', array( 'alify-gsap' ) ),
@@ -65,10 +118,14 @@ function alify_enqueue_frontend_assets() {
 		'page-hero'     => array( 'theme-assets/js/page-hero-wordpress.js', array( 'alify-gsap', 'alify-scrolltrigger' ) ),
 		'pages'         => array( 'theme-assets/js/pages-wordpress.js', array( 'alify-gsap', 'alify-scrolltrigger', 'alify-wp-integration' ) ),
 		'main'          => array( 'js/main.js', array( 'alify-gsap', 'alify-scrolltrigger' ) ),
-		'home'          => array( 'js/home.js', array( 'alify-gsap' ) ),
+		'home'          => array( 'js/home.js', array( 'alify-gsap', 'alify-pages' ) ),
 	);
 
 	foreach ( $js_files as $handle => $details ) {
+		// The homepage bundle assumes homepage-only tabs, FAQ search, and prompt markup.
+		if ( 'home' === $handle && ! $load_home_script ) {
+			continue;
+		}
 		$relative_path = $details[0];
 		$is_theme_script = in_array( $handle, array( 'wp-integration', 'header', 'footer', 'page-hero', 'pages' ), true );
 		$file           = $is_theme_script ? ALIFY_THEME_DIR . '/' . $relative_path : ALIFY_THEME_DIR . '/frontend-source/assets/' . $relative_path;
@@ -93,6 +150,16 @@ function alify_enqueue_frontend_assets() {
 
 	$primary_menu = wp_nav_menu( array( 'theme_location' => 'primary', 'container' => false, 'menu_class' => 'header__nav-list', 'depth' => 1, 'echo' => false, 'fallback_cb' => false ) );
 	$footer_menu  = wp_nav_menu( array( 'theme_location' => 'footer', 'container' => false, 'menu_class' => 'footer__menu-list', 'depth' => 1, 'echo' => false, 'fallback_cb' => false ) );
+	$logo_url = $logo_url ? esc_url_raw( $logo_url, array( 'http', 'https' ) ) : '';
+	$header_cta_url = function_exists( 'get_field' ) ? esc_url_raw( (string) get_field( 'header_cta_url', 'option' ), array( 'http', 'https' ) ) : '';
+	$contact_email  = function_exists( 'get_field' ) ? sanitize_email( (string) get_field( 'contact_email', 'option' ) ) : '';
+	if ( ! is_email( $contact_email ) ) {
+		$contact_email = '';
+	}
+	$contact_phone   = function_exists( 'get_field' ) ? sanitize_text_field( (string) get_field( 'contact_phone', 'option' ) ) : '';
+	$business_address = function_exists( 'get_field' ) ? sanitize_textarea_field( (string) get_field( 'business_address', 'option' ) ) : '';
+	$header_cta_label = function_exists( 'get_field' ) ? sanitize_text_field( (string) get_field( 'header_cta_label', 'option' ) ) : '';
+	$footer_copyright = function_exists( 'get_field' ) ? sanitize_text_field( (string) get_field( 'footer_copyright', 'option' ) ) : '';
 	$social_links = function_exists( 'get_field' ) ? get_field( 'social_links', 'option' ) : array();
 	$social_links = is_array( $social_links ) ? array_values( array_filter( array_map( 'alify_normalize_social_link', $social_links ) ) ) : array();
 
@@ -104,12 +171,12 @@ function alify_enqueue_frontend_assets() {
 			'assetsBase'       => $base,
 			'routes'           => alify_build_source_routes(),
 			'logoUrl'          => $logo_url,
-			'headerCtaLabel'   => function_exists( 'get_field' ) ? (string) get_field( 'header_cta_label', 'option' ) : '',
-			'headerCtaUrl'     => function_exists( 'get_field' ) ? (string) get_field( 'header_cta_url', 'option' ) : '',
-			'footerCopyright'  => function_exists( 'get_field' ) ? (string) get_field( 'footer_copyright', 'option' ) : '',
-			'contactEmail'     => function_exists( 'get_field' ) ? (string) get_field( 'contact_email', 'option' ) : '',
-			'contactPhone'     => function_exists( 'get_field' ) ? (string) get_field( 'contact_phone', 'option' ) : '',
-			'businessAddress'  => function_exists( 'get_field' ) ? (string) get_field( 'business_address', 'option' ) : '',
+			'headerCtaLabel'   => $header_cta_label,
+			'headerCtaUrl'     => $header_cta_url,
+			'footerCopyright'  => $footer_copyright,
+			'contactEmail'     => $contact_email,
+			'contactPhone'     => $contact_phone,
+			'businessAddress'  => $business_address,
 			'socialLinks'      => $social_links,
 			'primaryMenuHtml'  => $primary_menu ? wp_kses_post( $primary_menu ) : '',
 			'footerMenuHtml'   => $footer_menu ? wp_kses_post( $footer_menu ) : '',
@@ -118,9 +185,17 @@ function alify_enqueue_frontend_assets() {
 }
 add_action( 'wp_enqueue_scripts', 'alify_enqueue_frontend_assets' );
 
-/** Resolve the original static filename to the matching WordPress URL. */
+/** Resolve the original static filename to the matching WordPress URL once per request. */
 function alify_source_url( $slug ) {
+	static $route_cache = array();
 	$slug = sanitize_title( $slug );
+	if ( ! array_key_exists( $slug, $route_cache ) ) {
+		$route_cache[ $slug ] = alify_resolve_source_url( $slug );
+	}
+	return $route_cache[ $slug ];
+}
+
+function alify_resolve_source_url( $slug ) {
 	$archives = array(
 		'services'    => 'service',
 		'projects'    => 'work',
@@ -149,7 +224,21 @@ function alify_source_url( $slug ) {
 	}
 
 	$post_types = array( 'page', 'post', 'service', 'work', 'case_study', 'industry', 'faq', 'pricing', 'testimonial' );
-	$object     = get_page_by_path( $slug, OBJECT, $post_types );
+	$source_matches = get_posts(
+		array(
+			'post_type'      => $post_types,
+			'post_status'    => 'publish',
+			'meta_key'       => '_alify_source_slug',
+			'meta_value'     => $slug,
+			'posts_per_page' => 1,
+			'fields'         => 'ids',
+			'no_found_rows'  => true,
+		)
+	);
+	if ( $source_matches ) {
+		return get_permalink( $source_matches[0] );
+	}
+	$object = get_page_by_path( $slug, OBJECT, $post_types );
 	if ( $object ) {
 		return get_permalink( $object );
 	}
@@ -397,8 +486,15 @@ function alify_render_source_view( $slug ) {
 			}
 		}
 	}
-	if ( in_array( $slug, array( 'contact', 'start-project' ), true ) && function_exists( 'alify_prepare_source_inquiry' ) ) {
+	if ( in_array( $slug, array( 'index', 'contact', 'start-project' ), true ) && function_exists( 'alify_prepare_source_inquiry' ) ) {
 		$markup = alify_prepare_source_inquiry( $markup, $slug );
+	}
+	if ( function_exists( 'get_field' ) ) {
+		$contact_email = sanitize_email( (string) get_field( 'contact_email', 'option' ) );
+		if ( is_email( $contact_email ) ) {
+			$markup = str_replace( 'mailto:hello@alify.com', 'mailto:' . esc_attr( $contact_email ), $markup );
+			$markup = str_replace( 'hello@alify.com', esc_html( $contact_email ), $markup );
+		}
 	}
 	$markup = str_replace( 'assets/', esc_url( alify_source_assets_uri() ) . '/', $markup );
 	$markup = preg_replace_callback(
@@ -442,7 +538,11 @@ function alify_source_body_classes( $classes ) {
 	} else {
 		$object = get_queried_object();
 		if ( $object instanceof WP_Post ) {
-			$slug = $object->post_name;
+			$slug        = $object->post_name;
+			$source_slug = sanitize_file_name( (string) get_post_meta( $object->ID, '_alify_source_slug', true ) );
+			if ( $source_slug ) {
+				$slug = 'home' === $source_slug ? 'index' : $source_slug;
+			}
 		}
 	}
 	if ( isset( $map[ $slug ] ) ) {
@@ -480,6 +580,13 @@ function alify_current_source_view( $fallback = '' ) {
 					return $legal_slug;
 				}
 			}
+		}
+		$source_slug = sanitize_file_name( (string) get_post_meta( $object->ID, '_alify_source_slug', true ) );
+		if ( 'home' === $source_slug ) {
+			$source_slug = 'index';
+		}
+		if ( $source_slug && is_readable( ALIFY_THEME_DIR . '/template-parts/source-pages/' . $source_slug . '.php' ) ) {
+			return $source_slug;
 		}
 		if ( is_readable( ALIFY_THEME_DIR . '/template-parts/source-pages/' . $slug . '.php' ) ) {
 			return $slug;

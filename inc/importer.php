@@ -103,8 +103,24 @@ function alify_import_starter_content() {
 	$errors  = array();
 	foreach ( alify_starter_content_manifest() as $slug => $details ) {
 		list( $post_type, $title ) = $details;
-		$excerpt = alify_get_source_excerpt( $slug );
-		$existing = get_page_by_path( $slug, OBJECT, $post_type );
+		$excerpt        = alify_get_source_excerpt( $slug );
+		$source_matches = get_posts(
+			array(
+				'post_type'      => $post_type,
+				'post_status'    => array( 'publish', 'draft', 'pending', 'private', 'future' ),
+				'meta_key'       => '_alify_source_slug',
+				'meta_value'     => $slug,
+				'posts_per_page' => 1,
+				'no_found_rows'  => true,
+			)
+		);
+		$existing = $source_matches ? $source_matches[0] : get_page_by_path( $slug, OBJECT, $post_type );
+		if ( $existing ) {
+			$existing_source_slug = get_post_meta( $existing->ID, '_alify_source_slug', true );
+			if ( $existing_source_slug && $slug !== $existing_source_slug ) {
+				$existing = false;
+			}
+		}
 		if ( $existing ) {
 			$id = $existing->ID;
 			++$skipped;
@@ -125,6 +141,9 @@ function alify_import_starter_content() {
 				continue;
 			}
 			++$created;
+		}
+		if ( ! get_post_meta( $id, '_alify_source_slug', true ) ) {
+			update_post_meta( $id, '_alify_source_slug', $slug );
 		}
 
 		// Seed complete editable source markup once, without overwriting existing body content.

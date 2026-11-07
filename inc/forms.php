@@ -178,7 +178,7 @@ function alify_form_shortcode( $attributes ) {
 			$message = get_field( 'forms_success_message', 'option' );
 		}
 		if ( ! $message ) {
-			$message = 'success' === $status ? __( 'Thanks, your message has been sent.', 'alify' ) : __( 'There was a problem sending your message. Please check the form and try again.', 'alify' );
+			$message = 'success' === $status ? __( 'Thanks, your message has been received.', 'alify' ) : __( 'There was a problem submitting your message. Please check the form and try again.', 'alify' );
 		}
 		echo '<p class="alify-form-notice alify-form-notice--' . esc_attr( $status ) . '" role="status">' . esc_html( $message ) . '</p>';
 	}
@@ -198,7 +198,7 @@ function alify_form_shortcode( $attributes ) {
 			?>
 			<div class="form-field">
 				<?php if ( in_array( $type, array( 'checkbox', 'radio' ), true ) ) : ?>
-					<fieldset class="alify-form-options"><legend><?php echo esc_html( $label ); ?><?php echo $required ? ' <span aria-hidden="true">*</span>' : ''; ?></legend><?php $option_index = 0; foreach ( $options as $value => $option_label ) : $option_id = $id . '-option-' . $option_index; ++$option_index; ?><label for="<?php echo esc_attr( $option_id ); ?>"><input id="<?php echo esc_attr( $option_id ); ?>" type="<?php echo esc_attr( $type ); ?>" name="<?php echo esc_attr( $name . ( 'checkbox' === $type ? '[]' : '' ) ); ?>" value="<?php echo esc_attr( $value ); ?>" <?php echo $required ? 'required' : ''; ?>> <?php echo esc_html( $option_label ); ?></label><?php endforeach; ?></fieldset>
+					<fieldset class="alify-form-options" <?php echo $required && 'checkbox' === $type ? 'data-alify-required-group aria-required="true"' : ''; ?>><legend><?php echo esc_html( $label ); ?><?php echo $required ? ' <span aria-hidden="true">*</span>' : ''; ?></legend><?php $option_index = 0; foreach ( $options as $value => $option_label ) : $option_id = $id . '-option-' . $option_index; ++$option_index; ?><label for="<?php echo esc_attr( $option_id ); ?>"><input id="<?php echo esc_attr( $option_id ); ?>" type="<?php echo esc_attr( $type ); ?>" name="<?php echo esc_attr( $name . ( 'checkbox' === $type ? '[]' : '' ) ); ?>" value="<?php echo esc_attr( $value ); ?>" <?php echo $required && 'radio' === $type ? 'required' : ''; ?>> <?php echo esc_html( $option_label ); ?></label><?php endforeach; ?></fieldset>
 				<?php else : ?>
 					<label for="<?php echo esc_attr( $id ); ?>"><?php echo esc_html( $label ); ?><?php echo $required ? ' <span aria-hidden="true">*</span>' : ''; ?></label>
 					<?php if ( 'textarea' === $type ) : ?>
@@ -221,32 +221,86 @@ function alify_form_shortcode( $attributes ) {
 }
 add_shortcode( 'alify_form', 'alify_form_shortcode' );
 
-/** Add nonce, source key, redirect, and honeypot to the supplied inquiry designs. */
+/** Add nonce, source key, redirect, consent, and honeypot to supplied inquiry designs. */
 function alify_prepare_source_inquiry( $markup, $source ) {
-	$source = in_array( $source, array( 'contact', 'start-project' ), true ) ? $source : '';
+	$source = in_array( $source, array( 'index', 'contact', 'start-project' ), true ) ? $source : '';
 	if ( ! $source ) {
 		return $markup;
 	}
-	$action = esc_url( admin_url( 'admin-post.php' ) );
-	$hidden = '<input type="hidden" name="action" value="alify_submit_inquiry">'
-		. '<input type="hidden" name="form_source" value="' . esc_attr( $source ) . '">'
+	$source_key = 'index' === $source ? 'homepage' : $source;
+	$action     = esc_url( admin_url( 'admin-post.php' ) );
+	$return_to  = 'index' === $source ? home_url( '/' ) : get_permalink();
+	$honeypot_id = 'alify-company-website-' . sanitize_html_class( $source_key );
+	$hidden      = '<input type="hidden" name="action" value="alify_submit_inquiry">'
+		. '<input type="hidden" name="form_source" value="' . esc_attr( $source_key ) . '">'
 		. '<input type="hidden" name="alify_nonce" value="' . esc_attr( wp_create_nonce( 'alify_public_form' ) ) . '">'
-		. '<input type="hidden" name="_alify_return_to" value="' . esc_url( get_permalink() ) . '">'
-		. '<div class="alify-honeypot" aria-hidden="true"><label for="alify-company-website">Leave this field empty<input id="alify-company-website" name="alify_company_website" type="text" tabindex="-1" autocomplete="off"></label></div>';
+		. '<input type="hidden" name="_alify_return_to" value="' . esc_url( $return_to ) . '">'
+		. '<div class="alify-honeypot" aria-hidden="true"><label for="' . esc_attr( $honeypot_id ) . '">' . esc_html__( 'Leave this field empty', 'alify' ) . '<input id="' . esc_attr( $honeypot_id ) . '" name="alify_company_website" type="text" tabindex="-1" autocomplete="off"></label></div>';
 
-	if ( isset( $_GET['form_status'], $_GET['form_key'] ) && $source === sanitize_key( wp_unslash( $_GET['form_key'] ) ) ) {
+	if ( isset( $_GET['form_status'], $_GET['form_key'] ) && $source_key === sanitize_key( wp_unslash( $_GET['form_key'] ) ) ) {
 		$status  = sanitize_key( wp_unslash( $_GET['form_status'] ) );
 		$message = 'success' === $status && function_exists( 'get_field' ) ? get_field( 'forms_success_message', 'option' ) : '';
 		if ( ! $message ) {
-			$message = 'success' === $status ? __( 'Thanks, your message has been received. We will be in touch soon.', 'alify' ) : __( 'There was a problem sending your message. Please check the form and try again.', 'alify' );
+			$message = 'success' === $status ? __( 'Thanks, your inquiry has been received by the site.', 'alify' ) : __( 'There was a problem submitting your inquiry. Please check the form and try again.', 'alify' );
 		}
 		$hidden = '<p class="alify-form-notice alify-form-notice--' . esc_attr( $status ) . '" role="status">' . esc_html( $message ) . '</p>' . $hidden;
 	}
 
+	// The homepage source form predates the privacy field used on the dedicated forms.
+	if ( 'index' === $source && ! preg_match( '~\bname=("|\x27)privacyConsent\1~i', $markup ) ) {
+		$privacy_page = function_exists( 'get_field' ) ? absint( get_field( 'forms_privacy_page', 'option' ) ) : 0;
+		$privacy_url  = $privacy_page ? get_permalink( $privacy_page ) : alify_source_url( 'privacy-policy' );
+		$consent      = '<div class="form-consent form-field--full"><label><input type="checkbox" name="privacyConsent" value="Accepted" required><span>'
+			. esc_html__( 'I agree that these details may be used to respond to my inquiry.', 'alify' ) . ' <a href="' . esc_url( $privacy_url ) . '">' . esc_html__( 'Read our Privacy Policy.', 'alify' ) . '</a></span></label></div>';
+		$markup = preg_replace_callback(
+			'~</form>~i',
+			function ( $matches ) use ( $consent ) {
+				return $consent . $matches[0];
+			},
+			$markup,
+			1
+		);
+		// This mailto-only result panel is superseded by the server response notice.
+		$markup = preg_replace( '~<div\s+class="inquiry-form__result"[^>]*data-inquiry-result[^>]*>.*?</div>~is', '', $markup, 1 );
+	}
+
+	$markup = str_replace(
+		array(
+			'Prepare project email',
+			'Prepare email',
+			'Prepare my inquiry',
+			'This opens your email app with the inquiry pre-filled. Attach any private brief files there.',
+			'Submitting opens your email app with these details pre-filled.',
+			'No data is sent or stored until you continue in your email app.',
+			'Nothing has been sent yet. Continue to open your email app with these details pre-filled.',
+			'Continue to email',
+			'Your brief is ready. ',
+			'Continue in your email app',
+			' to send it to ALIFY.',
+			'Prepare your brief below, then send it directly through your email app.',
+		),
+		array(
+			'Send project brief',
+			'Send inquiry',
+			'Send inquiry',
+			'Your inquiry will be saved as a private Form Entry for the site team.',
+			'Your inquiry will be saved as a private Form Entry for the site team.',
+			'Your inquiry will be saved as a private Form Entry for the site team.',
+			'Review the details below, then continue to submit your inquiry to the website.',
+			'Send inquiry',
+			'Your inquiry has been submitted. ',
+			'Continue',
+			'.',
+			'Share a few details and the team can review your inquiry.',
+		),
+		$markup
+	);
+
 	return preg_replace_callback(
-		'~<form\\b([^>]*\\bdata-inquiry-form[^>]*)>~i',
+		'~<form\b([^>]*\bdata-inquiry-form[^>]*)>(.*?)</form>~is',
 		function ( $matches ) use ( $action, $hidden ) {
-			return '<form' . $matches[1] . ' action="' . $action . '" method="post" data-server-submit="true">' . $hidden;
+			$attributes = preg_replace( '~\s+(?:action|method|data-server-submit)\s*=\s*(?:"[^"]*"|\x27[^\x27]*\x27|[^\s>]+)~i', '', $matches[1] );
+			return '<form' . $attributes . ' action="' . $action . '" method="post" data-server-submit="true">' . $hidden . $matches[2] . '</form>';
 		},
 		$markup,
 		1
@@ -282,11 +336,16 @@ function alify_validate_configured_form( $form_id, $raw_data ) {
 			}
 			$value = array_map( 'sanitize_text_field', $value );
 		} else {
-			$value = (string) $value;
-			$value = wp_unslash( $value );
+			if ( ! is_scalar( $value ) ) {
+				return new WP_Error( 'invalid_value', sprintf( __( 'Invalid value for %s.', 'alify' ), $label ) );
+			}
+			$value = trim( (string) wp_unslash( $value ) );
 			if ( 'textarea' === $type ) {
 				$value = sanitize_textarea_field( $value );
 			} elseif ( 'email' === $type ) {
+				if ( '' !== $value && ! is_email( $value ) ) {
+					return new WP_Error( 'invalid_email', sprintf( __( 'Please enter a valid %s.', 'alify' ), $label ) );
+				}
 				$value = sanitize_email( $value );
 			} elseif ( 'url' === $type ) {
 				$value = esc_url_raw( $value );
@@ -329,40 +388,67 @@ function alify_validate_configured_form( $form_id, $raw_data ) {
 	return $clean;
 }
 
-/** Validate the fixed field set from the imported Contact / Start Project views. */
+/** Validate the fixed fields and enumerated choices from imported inquiry views. */
 function alify_validate_source_inquiry( $source, $raw_data ) {
-	$fields = 'contact' === $source
-		? array( 'name' => 'Name', 'email' => 'Email', 'company' => 'Company', 'service' => 'Service', 'message' => 'Message' )
-		: array( 'name' => 'Name', 'email' => 'Email', 'company' => 'Company', 'websiteOrBrief' => 'Website or brief', 'web' => 'Web Development', 'seo' => 'SEO', 'marketing' => 'Marketing', 'automation' => 'Automation', 'uiux' => 'UI UX', 'logo' => 'Logo Design', 'budget' => 'Budget', 'timeline' => 'Timeline', 'goals' => 'Goals', 'additionalContext' => 'Additional context' );
-	$required = 'contact' === $source ? array( 'name', 'email', 'service', 'message' ) : array( 'name', 'email', 'company', 'budget', 'timeline', 'goals' );
-	$clean    = array();
-	foreach ( $fields as $key => $label ) {
-		if ( ! isset( $raw_data[ $key ] ) ) {
+	$field_sets = array(
+		'contact' => array( 'name' => 'Name', 'email' => 'Email', 'company' => 'Company', 'service' => 'Service', 'message' => 'Message' ),
+		'start-project' => array( 'name' => 'Name', 'email' => 'Email', 'company' => 'Company', 'websiteOrBrief' => 'Website or brief', 'web' => 'Web Development', 'seo' => 'SEO', 'marketing' => 'Marketing', 'automation' => 'Automation', 'uiux' => 'UI UX', 'logo' => 'Logo Design', 'budget' => 'Budget', 'timeline' => 'Timeline', 'goals' => 'Goals', 'additionalContext' => 'Additional context' ),
+		'homepage' => array( 'name' => 'Name', 'email' => 'Email', 'service' => 'Service', 'brief' => 'Project brief' ),
+	);
+	if ( ! isset( $field_sets[ $source ] ) || ! is_array( $raw_data ) ) {
+		return new WP_Error( 'invalid_source', __( 'This form is not configured.', 'alify' ) );
+	}
+	$required = array(
+		'contact' => array( 'name', 'email', 'service', 'message' ),
+		'start-project' => array( 'name', 'email', 'company', 'budget', 'timeline', 'goals' ),
+		'homepage' => array( 'name', 'email', 'service', 'brief' ),
+	);
+	$allowed_values = array(
+		'service' => array( 'Web Development', 'SEO', 'Digital Marketing', 'AI Automation', 'UI UX Design', 'Logo Design', 'Not sure yet' ),
+		'web' => array( 'Web Development' ),
+		'seo' => array( 'SEO' ),
+		'marketing' => array( 'Digital Marketing' ),
+		'automation' => array( 'AI Automation' ),
+		'uiux' => array( 'UI UX Design' ),
+		'logo' => array( 'Logo Design' ),
+		'budget' => array( 'Under $3,000', '$3,000–$7,500', '$7,500–$15,000', '$15,000+', 'Not defined yet' ),
+		'timeline' => array( 'As soon as practical', 'Within 1–3 months', 'Within 3–6 months', 'Exploring for later' ),
+	);
+	$clean = array();
+	foreach ( $field_sets[ $source ] as $key => $label ) {
+		if ( ! array_key_exists( $key, $raw_data ) ) {
+			if ( in_array( $key, $required[ $source ], true ) ) {
+				return new WP_Error( 'required', sprintf( __( 'Please complete the %s field.', 'alify' ), $label ) );
+			}
 			continue;
 		}
-		$value = $raw_data[ $key ];
-		if ( is_array( $value ) ) {
-			if ( ! in_array( $key, array( 'web', 'seo', 'marketing', 'automation', 'uiux', 'logo' ), true ) ) {
-				return new WP_Error( 'invalid_value', __( 'Invalid form values were submitted.', 'alify' ) );
-			}
-			$value = wp_unslash( $value );
-			foreach ( $value as $selected_value ) {
-				if ( ! is_scalar( $selected_value ) ) {
-					return new WP_Error( 'invalid_value', __( 'Invalid form values were submitted.', 'alify' ) );
-				}
-			}
-			$value = array_map( 'sanitize_text_field', $value );
-		} else {
-			$value = 'message' === $key || 'goals' === $key || 'additionalContext' === $key ? sanitize_textarea_field( wp_unslash( $value ) ) : sanitize_text_field( wp_unslash( $value ) );
+		if ( ! is_scalar( $raw_data[ $key ] ) ) {
+			return new WP_Error( 'invalid_value', __( 'Invalid form values were submitted.', 'alify' ) );
 		}
-		if ( in_array( $key, $required, true ) && ( '' === $value || array() === $value ) ) {
+		$raw_value = trim( (string) wp_unslash( $raw_data[ $key ] ) );
+		if ( 'email' === $key && ! is_email( $raw_value ) ) {
+			return new WP_Error( 'invalid_email', __( 'Please enter a valid email address.', 'alify' ) );
+		}
+		$value = 'email' === $key
+			? sanitize_email( $raw_value )
+			: ( in_array( $key, array( 'message', 'goals', 'additionalContext', 'brief' ), true ) ? sanitize_textarea_field( $raw_value ) : sanitize_text_field( $raw_value ) );
+		if ( in_array( $key, $required[ $source ], true ) && '' === trim( $value ) ) {
 			return new WP_Error( 'required', sprintf( __( 'Please complete the %s field.', 'alify' ), $label ) );
+		}
+		if ( isset( $allowed_values[ $key ] ) && '' !== $value && ! in_array( $value, $allowed_values[ $key ], true ) ) {
+			return new WP_Error( 'invalid_value', sprintf( __( 'Choose a valid option for %s.', 'alify' ), $label ) );
 		}
 		if ( 'email' === $key && ! is_email( $value ) ) {
 			return new WP_Error( 'invalid_email', __( 'Please enter a valid email address.', 'alify' ) );
 		}
 		if ( 'websiteOrBrief' === $key && '' !== $value && ! wp_http_validate_url( $value ) ) {
 			return new WP_Error( 'invalid_url', __( 'Please enter a valid website URL.', 'alify' ) );
+		}
+		if ( 'brief' === $key ) {
+			$length = function_exists( 'mb_strlen' ) ? mb_strlen( trim( $value ) ) : strlen( trim( $value ) );
+			if ( $length < 10 ) {
+				return new WP_Error( 'brief_too_short', __( 'Please add at least 10 characters to your project brief.', 'alify' ) );
+			}
 		}
 		$clean[ $label ] = $value;
 	}
@@ -395,7 +481,7 @@ function alify_handle_public_form_submission() {
 	$form_key = $form_id ? 'form-' . $form_id : $source;
 	$return_to = isset( $_POST['_alify_return_to'] ) && is_scalar( $_POST['_alify_return_to'] ) ? esc_url_raw( wp_unslash( $_POST['_alify_return_to'] ) ) : '';
 	$return_to = wp_validate_redirect( $return_to, home_url( '/' ) );
-	if ( ! in_array( $action, array( 'alify_submit_form', 'alify_submit_inquiry' ), true ) || ( 'alify_submit_form' === $action && ( ! $form_id || $source ) ) || ( 'alify_submit_inquiry' === $action && ( $form_id || ! in_array( $source, array( 'contact', 'start-project' ), true ) ) ) ) {
+	if ( ! in_array( $action, array( 'alify_submit_form', 'alify_submit_inquiry' ), true ) || ( 'alify_submit_form' === $action && ( ! $form_id || $source ) ) || ( 'alify_submit_inquiry' === $action && ( $form_id || ! in_array( $source, array( 'contact', 'start-project', 'homepage' ), true ) ) ) ) {
 		wp_die( esc_html__( 'Invalid form configuration.', 'alify' ), '', array( 'response' => 400 ) );
 	}
 
