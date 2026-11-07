@@ -301,6 +301,23 @@ function alify_render_source_view( $slug ) {
 				$markup
 			);
 		}
+		if ( 'index' === $slug ) {
+			$home_fields = array(
+				'hero_eyebrow'     => '~(<p class="intro__eyebrow">).*?(</p>)~is',
+				'hero_title'       => '~(<h1 class="intro__title"[^>]*>).*?(</h1>)~is',
+				'hero_description' => '~(<p class="intro__text">).*?(</p>)~is',
+			);
+			foreach ( $home_fields as $field_name => $home_pattern ) {
+				$value = get_field( $field_name );
+				if ( $value ) {
+					$markup = preg_replace_callback( $home_pattern, function ( $matches ) use ( $value ) { return $matches[1] . esc_html( $value ) . $matches[2]; }, $markup, 1 );
+				}
+			}
+			$background = get_field( 'hero_background' );
+			if ( $background && preg_match( '/^neon-lines-(?:0[1-9]|1[0-4])\\.webp$/', $background ) ) {
+				$markup = preg_replace( '~(assets/images/background/)neon-lines-(?:0[1-9]|1[0-4])\\.webp~', '$1' . $background, $markup, 1 );
+			}
+		}
 	}
 	if ( in_array( $slug, array( 'contact', 'start-project' ), true ) && function_exists( 'alify_prepare_source_inquiry' ) ) {
 		$markup = alify_prepare_source_inquiry( $markup, $slug );

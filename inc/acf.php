@@ -197,7 +197,7 @@ function alify_register_acf_fields() {
 				array( 'key' => 'field_alify_form_fields', 'label' => __( 'Fields', 'alify' ), 'name' => 'form_fields', 'type' => 'repeater', 'layout' => 'row', 'button_label' => __( 'Add Form Field', 'alify' ), 'sub_fields' => array(
 					array( 'key' => 'field_alify_form_field_label', 'label' => __( 'Label', 'alify' ), 'name' => 'label', 'type' => 'text', 'required' => 1 ),
 					array( 'key' => 'field_alify_form_field_name', 'label' => __( 'Field Name', 'alify' ), 'name' => 'field_name', 'type' => 'text', 'required' => 1 ),
-					array( 'key' => 'field_alify_form_field_type', 'label' => __( 'Field Type', 'alify' ), 'name' => 'field_type', 'type' => 'select', 'choices' => array( 'text' => 'Text', 'email' => 'Email', 'tel' => 'Phone', 'textarea' => 'Textarea', 'select' => 'Select', 'checkbox' => 'Checkbox', 'radio' => 'Radio' ), 'default_value' => 'text', 'ui' => 1 ),
+					array( 'key' => 'field_alify_form_field_type', 'label' => __( 'Field Type', 'alify' ), 'name' => 'field_type', 'type' => 'select', 'choices' => array( 'text' => 'Text', 'email' => 'Email', 'tel' => 'Phone', 'url' => 'URL', 'textarea' => 'Textarea', 'select' => 'Select', 'checkbox' => 'Checkbox', 'radio' => 'Radio' ), 'default_value' => 'text', 'ui' => 1 ),
 					array( 'key' => 'field_alify_form_field_required', 'label' => __( 'Required', 'alify' ), 'name' => 'required', 'type' => 'true_false', 'ui' => 1 ),
 					array( 'key' => 'field_alify_form_field_options', 'label' => __( 'Options (one per line; use Label|value for custom values)', 'alify' ), 'name' => 'options', 'type' => 'textarea', 'rows' => 3 ),
 				) ),

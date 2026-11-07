@@ -36,6 +36,11 @@ function alify_render_form_entry_meta_box( $post ) {
 	if ( $form_id && get_post( $form_id ) ) {
 		echo '<p><strong>' . esc_html__( 'Source form:', 'alify' ) . '</strong> ' . esc_html( get_the_title( $form_id ) ) . '</p>';
 	}
+	$mail_status = get_post_meta( $post->ID, '_alify_email_status', true );
+	if ( $mail_status ) {
+		$status_label = 'sent' === $mail_status ? __( 'Notification email sent', 'alify' ) : __( 'Notification email failed — check SMTP/mail configuration', 'alify' );
+		echo '<p><strong>' . esc_html__( 'Email status:', 'alify' ) . '</strong> ' . esc_html( $status_label ) . '</p>';
+	}
 	if ( ! is_array( $data ) || empty( $data ) ) {
 		echo '<p>' . esc_html__( 'No submitted field data is stored on this entry.', 'alify' ) . '</p>';
 		return;
@@ -407,8 +412,9 @@ function alify_handle_public_form_submission() {
 	foreach ( $clean_data as $label => $value ) {
 		$body[] = sanitize_text_field( $label ) . ': ' . ( is_array( $value ) ? implode( ', ', array_map( 'sanitize_text_field', $value ) ) : sanitize_textarea_field( $value ) );
 	}
-	$headers = $reply_email ? array( 'Reply-To: ' . $reply_email ) : array();
-	wp_mail( $recipient, $subject, implode( "\n", $body ), $headers );
+	$headers   = $reply_email ? array( 'Reply-To: ' . $reply_email ) : array();
+	$mail_sent = wp_mail( $recipient, $subject, implode( "\n", $body ), $headers );
+	update_post_meta( $entry_id, '_alify_email_status', $mail_sent ? 'sent' : 'failed' );
 
 	wp_safe_redirect( add_query_arg( array( 'form_status' => 'success', 'form_key' => $form_key ), $return_to ) );
 	exit;
