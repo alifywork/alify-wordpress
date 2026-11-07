@@ -44,7 +44,10 @@ function alify_export_form_entries_csv() {
 	if ( ! current_user_can( 'manage_options' ) ) {
 		wp_die( esc_html__( 'You do not have permission to export form entries.', 'alify' ), '', array( 'response' => 403 ) );
 	}
-	check_admin_referer( 'alify_export_form_entries_action', 'alify_export_form_entries_nonce' );
+	$nonce = isset( $_POST['alify_export_form_entries_nonce'] ) && is_scalar( $_POST['alify_export_form_entries_nonce'] ) ? sanitize_text_field( wp_unslash( $_POST['alify_export_form_entries_nonce'] ) ) : '';
+	if ( ! wp_verify_nonce( $nonce, 'alify_export_form_entries_action' ) ) {
+		wp_die( esc_html__( 'This export request has expired. Please reload the page and try again.', 'alify' ), '', array( 'response' => 403 ) );
+	}
 
 	$batch_size = 500;
 	$page       = 1;

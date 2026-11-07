@@ -11,4 +11,5 @@ defined( 'ABSPATH' ) || exit;
 </head>
 <body <?php body_class(); ?>>
 <?php wp_body_open(); ?>
+<a class="alify-skip-link" href="<?php echo esc_attr( is_front_page() && ! is_home() ? '#home' : '#main-content' ); ?>"><?php esc_html_e( 'Skip to main content', 'alify' ); ?></a>
 <site-header></site-header>

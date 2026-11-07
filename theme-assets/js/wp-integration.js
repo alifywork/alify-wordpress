@@ -1,5 +1,18 @@
 "use strict";
 
+document.addEventListener("click", (event) => {
+  const skipLink = event.target instanceof Element ? event.target.closest("a.alify-skip-link") : null;
+  if (!skipLink || !skipLink.hash) return;
+  let targetId;
+  try { targetId = decodeURIComponent(skipLink.hash.slice(1)); } catch (_) { return; }
+  const target = document.getElementById(targetId) || document.getElementById("main-content") || document.querySelector("main");
+  if (!target) return;
+  if (!target.hasAttribute("tabindex")) target.setAttribute("tabindex", "-1");
+  requestAnimationFrame(() => {
+    try { target.focus({ preventScroll: true }); } catch (_) { target.focus(); }
+  });
+});
+
 /** Replace static-site paths with the active theme asset and WordPress URLs. */
 window.alifyFixThemeMarkup = function (root) {
   const config = window.AlifyTheme || {};

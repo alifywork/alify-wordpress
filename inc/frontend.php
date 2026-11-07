@@ -46,15 +46,37 @@ function alify_output_meta_description() {
 		if ( ! $description && function_exists( 'get_field' ) ) {
 			$description = (string) get_field( 'hero_description', $post_id );
 		}
+		if ( ! $description ) {
+			$content     = get_post_field( 'post_content', $post_id );
+			$description = wp_strip_all_tags( strip_shortcodes( (string) $content ) );
+		}
 	} elseif ( is_category() || is_tag() || is_tax() ) {
 		$description = term_description();
+		if ( ! $description ) {
+			$description = single_term_title( '', false ) . ' — ' . get_bloginfo( 'description' );
+		}
 	} elseif ( is_post_type_archive() || is_home() ) {
 		$description = function_exists( 'get_field' ) ? (string) get_field( 'archive_description', 'option' ) : '';
+		if ( ! $description && is_post_type_archive() && function_exists( 'alify_current_source_view' ) && function_exists( 'alify_get_source_excerpt' ) ) {
+			$source_view = alify_current_source_view();
+			if ( $source_view ) {
+				$description = alify_get_source_excerpt( $source_view );
+			}
+		}
+		if ( ! $description && is_home() && function_exists( 'alify_get_source_excerpt' ) ) {
+			$description = alify_get_source_excerpt( 'blog' );
+		}
 		if ( ! $description && is_home() ) {
 			$description = get_bloginfo( 'description' );
 		}
+		if ( ! $description && is_post_type_archive() ) {
+			$description = post_type_archive_title( '', false ) . ' — ' . get_bloginfo( 'description' );
+		}
 	} elseif ( is_front_page() ) {
 		$description = get_bloginfo( 'description' );
+		if ( ! $description && function_exists( 'alify_get_source_excerpt' ) ) {
+			$description = alify_get_source_excerpt( 'index' );
+		}
 	}
 
 	$description = wp_trim_words( sanitize_text_field( wp_strip_all_tags( $description ) ), 32, '' );

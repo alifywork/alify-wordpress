@@ -199,7 +199,10 @@ function alify_content_setup_page() {
 	}
 	$result = null;
 	if ( isset( $_POST['alify_import_starter_content'] ) ) {
-		check_admin_referer( 'alify_import_starter_content_action', 'alify_import_starter_content_nonce' );
+		$nonce = isset( $_POST['alify_import_starter_content_nonce'] ) && is_scalar( $_POST['alify_import_starter_content_nonce'] ) ? sanitize_text_field( wp_unslash( $_POST['alify_import_starter_content_nonce'] ) ) : '';
+		if ( ! wp_verify_nonce( $nonce, 'alify_import_starter_content_action' ) ) {
+			wp_die( esc_html__( 'This setup request has expired. Please reload the page and try again.', 'alify' ), '', array( 'response' => 403 ) );
+		}
 		$result = alify_import_starter_content();
 	}
 	?>

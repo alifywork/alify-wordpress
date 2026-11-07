@@ -92,6 +92,16 @@ function alify_get_form_fields( $form_id ) {
 	return is_array( $fields ) ? $fields : array();
 }
 
+/** Accept only recognized scalar status values from a form's post/redirect/get response. */
+function alify_get_form_status( $expected_key ) {
+	if ( ! isset( $_GET['form_status'], $_GET['form_key'] ) || ! is_scalar( $_GET['form_status'] ) || ! is_scalar( $_GET['form_key'] ) ) {
+		return '';
+	}
+	$status = sanitize_key( wp_unslash( $_GET['form_status'] ) );
+	$key    = sanitize_key( wp_unslash( $_GET['form_key'] ) );
+	return hash_equals( (string) $expected_key, $key ) && in_array( $status, array( 'success', 'error' ), true ) ? $status : '';
+}
+
 /** Parse newline choices; each line may be a label, or Label|stored-value. */
 function alify_parse_form_options( $raw_options ) {
 	$options = array();
@@ -171,8 +181,8 @@ function alify_form_shortcode( $attributes ) {
 		echo '<p class="alify-form-error">' . esc_html__( 'Some configured fields were skipped because their names are reserved, duplicated, or incomplete. Review the field definitions in ACF.', 'alify' ) . '</p>';
 	}
 	$status_key = 'form-' . $form_id;
-	if ( isset( $_GET['form_status'], $_GET['form_key'] ) && $status_key === sanitize_key( wp_unslash( $_GET['form_key'] ) ) ) {
-		$status  = sanitize_key( wp_unslash( $_GET['form_status'] ) );
+	$status     = alify_get_form_status( $status_key );
+	if ( $status ) {
 		$message = 'success' === $status ? alify_get_form_option( $form_id, 'success_message' ) : '';
 		if ( ! $message && 'success' === $status && function_exists( 'get_field' ) ) {
 			$message = get_field( 'forms_success_message', 'option' );
@@ -237,8 +247,8 @@ function alify_prepare_source_inquiry( $markup, $source ) {
 		. '<input type="hidden" name="_alify_return_to" value="' . esc_url( $return_to ) . '">'
 		. '<div class="alify-honeypot" aria-hidden="true"><label for="' . esc_attr( $honeypot_id ) . '">' . esc_html__( 'Leave this field empty', 'alify' ) . '<input id="' . esc_attr( $honeypot_id ) . '" name="alify_company_website" type="text" tabindex="-1" autocomplete="off"></label></div>';
 
-	if ( isset( $_GET['form_status'], $_GET['form_key'] ) && $source_key === sanitize_key( wp_unslash( $_GET['form_key'] ) ) ) {
-		$status  = sanitize_key( wp_unslash( $_GET['form_status'] ) );
+	$status = alify_get_form_status( $source_key );
+	if ( $status ) {
 		$message = 'success' === $status && function_exists( 'get_field' ) ? get_field( 'forms_success_message', 'option' ) : '';
 		if ( ! $message ) {
 			$message = 'success' === $status ? __( 'Thanks, your inquiry has been received by the site.', 'alify' ) : __( 'There was a problem submitting your inquiry. Please check the form and try again.', 'alify' );
