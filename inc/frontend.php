@@ -96,7 +96,7 @@ function alify_enqueue_frontend_assets() {
 		);
 	}
 
-	$load_home_script = is_front_page();
+	$load_home_script = is_front_page() && ! is_home();
 	if ( $load_home_script && is_singular() ) {
 		$front_id   = get_queried_object_id();
 		$mode       = get_post_meta( $front_id, '_alify_content_mode', true );
@@ -526,10 +526,10 @@ function alify_render_source_view( $slug ) {
 function alify_source_body_classes( $classes ) {
 	$map = include ALIFY_THEME_DIR . '/inc/source-body-classes.php';
 	$slug = '';
-	if ( is_front_page() ) {
-		$slug = 'index';
-	} elseif ( is_home() ) {
+	if ( is_home() ) {
 		$slug = 'blog';
+	} elseif ( is_front_page() ) {
+		$slug = 'index';
 	} elseif ( is_post_type_archive() ) {
 		$archive_map = array( 'service' => 'services', 'work' => 'projects', 'case_study' => 'case-studies', 'industry' => 'industries', 'faq' => 'faqs', 'pricing' => 'pricing', 'testimonial' => 'testimonials' );
 		$type = get_query_var( 'post_type' );
@@ -554,11 +554,11 @@ add_filter( 'body_class', 'alify_source_body_classes' );
 
 /** Select the closest matching source view for a queried WordPress object. */
 function alify_current_source_view( $fallback = '' ) {
-	if ( is_front_page() ) {
-		return 'index';
-	}
 	if ( is_home() || is_search() || is_category() || is_tag() ) {
 		return 'blog';
+	}
+	if ( is_front_page() ) {
+		return 'index';
 	}
 	if ( is_post_type_archive() ) {
 		$type = get_query_var( 'post_type' );

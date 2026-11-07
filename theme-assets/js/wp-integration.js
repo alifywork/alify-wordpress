@@ -100,14 +100,17 @@ window.alifyFixThemeMarkup = function (root) {
     });
   }
 
-  if (config.contactEmail) {
-    root.querySelectorAll(".footer__brand-email").forEach((link) => {
-      const icon = link.querySelector("i");
-      link.href = `mailto:${config.contactEmail}`;
-      link.textContent = `${config.contactEmail} `;
-      if (icon) link.append(icon);
-    });
-  }
+  root.querySelectorAll(".footer__brand-email[data-site-email]").forEach((link) => {
+    if (!config.contactEmail) {
+      link.remove();
+      return;
+    }
+    const icon = link.querySelector("i");
+    link.href = `mailto:${config.contactEmail}`;
+    link.textContent = `${config.contactEmail} `;
+    link.hidden = false;
+    if (icon) link.append(icon);
+  });
   if (config.contactPhone) {
     root.querySelectorAll(".footer__contact-card").forEach((card) => {
       const phone = document.createElement("a");

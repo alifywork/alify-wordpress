@@ -33,7 +33,7 @@ class SiteFooter extends HTMLElement {
                     <img src="assets/images/logo/light-logo.png" alt="Alify" width="469" height="125" loading="lazy" decoding="async">
                   </a>
                   <p>Independent digital studio bringing strategy, thoughtful design, and creative technology together for ambitious brands.</p>
-                  <a class="footer__brand-email" href="mailto:hello@alify.com">hello@alify.com <i class="fa-solid fa-arrow-right icon-arrow-up-right" aria-hidden="true"></i></a>
+                  <a class="footer__brand-email" data-site-email hidden><i class="fa-solid fa-arrow-right icon-arrow-up-right" aria-hidden="true"></i></a>
                 </div>
               </div>
 
