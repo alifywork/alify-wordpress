@@ -22,3 +22,7 @@ Use the page editor's Template selector to choose Home Page, About Us, Contact U
 - The forms area is currently a backend data/configuration scaffold only. There is no public form renderer, submission endpoint, validation, email delivery, or spam protection yet, because frontend work was explicitly deferred.
 - The form entry type is private and is not exposed in public search or REST API.
 - The duplicated Testimonials request was treated as one content type.
+
+## Imported static-site source
+
+The complete source snapshot from `alifywork/alify-web`, branch `arena/08a66435-alify-web`, is preserved in `frontend-source/`. It is kept as a separate directory so none of its static files overwrite this WordPress theme's PHP entry points or theme documentation. The snapshot includes the original HTML pages, assets, and project documentation; it is not yet converted into WordPress templates or wired to the ACF content model.
