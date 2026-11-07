@@ -77,14 +77,15 @@ function alify_register_admin_post_type( $slug, $plural, $singular, $icon, $hier
 			'map_meta_cap'    => true,
 	);
 
-	if ( 'alify_form_entry' === $slug ) {
-		// Entries contain personal information: only users with manage_options may read or mutate them.
-		$private_caps = array(
+	if ( in_array( $slug, array( 'alify_form', 'alify_form_template', 'alify_form_entry' ), true ) ) {
+		// Form definitions control where inquiries are sent; entries contain personal information.
+		// Restrict these post types to administrators to prevent unauthorized form changes or data exfiltration.
+		$admin_caps = array(
 			'edit_post', 'read_post', 'delete_post', 'edit_posts', 'edit_others_posts', 'publish_posts',
 			'read_private_posts', 'delete_posts', 'delete_private_posts', 'delete_published_posts',
 			'delete_others_posts', 'edit_private_posts', 'edit_published_posts', 'create_posts',
 		);
-		$args['capabilities'] = array_fill_keys( $private_caps, 'manage_options' );
+		$args['capabilities'] = array_fill_keys( $admin_caps, 'manage_options' );
 	}
 
 	register_post_type( $slug, $args );

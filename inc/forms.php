@@ -307,13 +307,20 @@ function alify_prepare_source_inquiry( $markup, $source ) {
 	);
 }
 
+/** Count user-facing text consistently when the optional mbstring extension is unavailable. */
+function alify_form_text_length( $value ) {
+	$value = (string) $value;
+	return function_exists( 'mb_strlen' ) ? mb_strlen( $value, 'UTF-8' ) : strlen( $value );
+}
+
 /** Validate field data from a configured reusable form. */
 function alify_validate_configured_form( $form_id, $raw_data ) {
 	$definitions = alify_normalize_form_fields( alify_get_form_fields( $form_id ) );
 	if ( empty( $definitions ) ) {
 		return new WP_Error( 'missing_fields', __( 'This form is not configured.', 'alify' ) );
 	}
-	$clean = array();
+	$clean             = array();
+	$total_text_length = 0;
 	foreach ( $definitions as $field ) {
 		$name = sanitize_key( $field['field_name'] ?? '' );
 		if ( '' === $name ) {
@@ -352,6 +359,21 @@ function alify_validate_configured_form( $form_id, $raw_data ) {
 			} else {
 				$value = sanitize_text_field( $value );
 			}
+		}
+		$field_text_length = 0;
+		if ( is_array( $value ) ) {
+			if ( count( $value ) > 50 ) {
+				return new WP_Error( 'too_many_choices', sprintf( __( 'Too many choices were submitted for %s.', 'alify' ), $label ) );
+			}
+			foreach ( $value as $selected_value ) {
+				$field_text_length += alify_form_text_length( $selected_value );
+			}
+		} else {
+			$field_text_length = alify_form_text_length( $value );
+		}
+		$total_text_length += $field_text_length;
+		if ( $field_text_length > 5000 || $total_text_length > 20000 ) {
+			return new WP_Error( 'too_long', __( 'Some submitted values are too long. Please shorten them and try again.', 'alify' ) );
 		}
 		if ( $required && ( '' === $value || array() === $value ) ) {
 			return new WP_Error( 'required', sprintf( __( 'Please complete the %s field.', 'alify' ), $label ) );
@@ -414,7 +436,8 @@ function alify_validate_source_inquiry( $source, $raw_data ) {
 		'budget' => array( 'Under $3,000', '$3,000–$7,500', '$7,500–$15,000', '$15,000+', 'Not defined yet' ),
 		'timeline' => array( 'As soon as practical', 'Within 1–3 months', 'Within 3–6 months', 'Exploring for later' ),
 	);
-	$clean = array();
+	$clean             = array();
+	$total_text_length = 0;
 	foreach ( $field_sets[ $source ] as $key => $label ) {
 		if ( ! array_key_exists( $key, $raw_data ) ) {
 			if ( in_array( $key, $required[ $source ], true ) ) {
@@ -432,6 +455,11 @@ function alify_validate_source_inquiry( $source, $raw_data ) {
 		$value = 'email' === $key
 			? sanitize_email( $raw_value )
 			: ( in_array( $key, array( 'message', 'goals', 'additionalContext', 'brief' ), true ) ? sanitize_textarea_field( $raw_value ) : sanitize_text_field( $raw_value ) );
+		$field_text_length = alify_form_text_length( $value );
+		$total_text_length += $field_text_length;
+		if ( $field_text_length > 5000 || $total_text_length > 20000 ) {
+			return new WP_Error( 'too_long', __( 'Some submitted values are too long. Please shorten them and try again.', 'alify' ) );
+		}
 		if ( in_array( $key, $required[ $source ], true ) && '' === trim( $value ) ) {
 			return new WP_Error( 'required', sprintf( __( 'Please complete the %s field.', 'alify' ), $label ) );
 		}

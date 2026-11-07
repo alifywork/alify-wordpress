@@ -21,7 +21,7 @@ A custom WordPress theme with the supplied Alify front-end converted into PHP te
 
 ## ACF Pro
 
-ACF Pro is optional for activation. When active it adds Theme Settings and fields for general details, header/footer, forms, and a Flexible Content builder (text, image/text, card grid, FAQ, CTA). Forms use a repeater-based field builder; a Form can use a reusable Form Template when it has no fields of its own. ACF is not required for the starter source layouts or source inquiry forms.
+ACF Pro is optional for activation. When active it adds Theme Settings and fields for general details, header/footer, forms, and a Flexible Content builder (text, image/text, card grid, FAQ, CTA). Theme Settings, form definitions, and Form Templates are restricted to users with the `manage_options` capability. Forms use a repeater-based field builder; a Form can use a reusable Form Template when it has no fields of its own. ACF is not required for the starter source layouts or source inquiry forms.
 
 ## First-time setup
 

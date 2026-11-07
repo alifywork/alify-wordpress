@@ -46,38 +46,45 @@ function alify_export_form_entries_csv() {
 	}
 	check_admin_referer( 'alify_export_form_entries_action', 'alify_export_form_entries_nonce' );
 
-	$query = new WP_Query(
-		array(
-			'post_type'      => 'alify_form_entry',
-			'post_status'    => array( 'private', 'publish' ),
-			'posts_per_page' => -1,
-			'orderby'        => 'date',
-			'order'          => 'DESC',
-			'fields'         => 'ids',
-			'no_found_rows'  => true,
-		)
-	);
+	$batch_size = 500;
+	$page       = 1;
 	nocache_headers();
 	header( 'Content-Type: text/csv; charset=utf-8' );
 	header( 'Content-Disposition: attachment; filename=alify-form-entries-' . gmdate( 'Y-m-d' ) . '.csv' );
 	$output = fopen( 'php://output', 'w' );
 	fputcsv( $output, array( 'Entry ID', 'Submitted at', 'Source form', 'Field', 'Value' ) );
-	foreach ( $query->posts as $entry_id ) {
-		$data = get_post_meta( $entry_id, '_alify_form_data', true );
-		$data = is_array( $data ) ? $data : array();
-		$form_id = absint( get_post_meta( $entry_id, '_alify_form_id', true ) );
-		$form_name = $form_id && get_post( $form_id ) ? get_the_title( $form_id ) : get_post_meta( $entry_id, '_alify_form_source', true );
-		if ( empty( $data ) ) {
-			fputcsv( $output, array( $entry_id, get_post_field( 'post_date', $entry_id ), $form_name, '', '' ) );
-			continue;
-		}
-		foreach ( $data as $label => $value ) {
-			if ( is_array( $value ) ) {
-				$value = implode( ', ', array_map( 'sanitize_text_field', $value ) );
+	do {
+		$query = new WP_Query(
+			array(
+				'post_type'      => 'alify_form_entry',
+				'post_status'    => array( 'private', 'publish' ),
+				'posts_per_page' => $batch_size,
+				'paged'          => $page,
+				'orderby'        => 'ID',
+				'order'          => 'ASC',
+				'fields'         => 'ids',
+				'no_found_rows'  => true,
+			)
+		);
+		foreach ( $query->posts as $entry_id ) {
+			$data = get_post_meta( $entry_id, '_alify_form_data', true );
+			$data = is_array( $data ) ? $data : array();
+			$form_id = absint( get_post_meta( $entry_id, '_alify_form_id', true ) );
+			$form_name = $form_id && get_post( $form_id ) ? get_the_title( $form_id ) : get_post_meta( $entry_id, '_alify_form_source', true );
+			if ( empty( $data ) ) {
+				fputcsv( $output, array_map( 'alify_csv_safe_cell', array( $entry_id, get_post_field( 'post_date', $entry_id ), $form_name, '', '' ) ) );
+				continue;
 			}
-			fputcsv( $output, array_map( 'alify_csv_safe_cell', array( $entry_id, get_post_field( 'post_date', $entry_id ), $form_name, $label, $value ) ) );
+			foreach ( $data as $label => $value ) {
+				if ( is_array( $value ) ) {
+					$value = implode( ', ', array_map( 'sanitize_text_field', $value ) );
+				}
+				fputcsv( $output, array_map( 'alify_csv_safe_cell', array( $entry_id, get_post_field( 'post_date', $entry_id ), $form_name, $label, $value ) ) );
+			}
 		}
-	}
+		$has_more = count( $query->posts ) === $batch_size;
+		++$page;
+	} while ( $has_more );
 	fclose( $output );
 	exit;
 }
