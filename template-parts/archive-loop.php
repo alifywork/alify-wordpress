@@ -33,7 +33,7 @@ if ( is_search() ) {
 	$eyebrow = __( 'The Alify Journal', 'alify' );
 }
 ?>
-<page-hero eyebrow="<?php echo esc_attr( $eyebrow ); ?>" title="<?php echo esc_attr( $heading ); ?>" description="<?php echo esc_attr( wp_strip_all_tags( $copy ) ); ?>" background="neon-lines-01.webp"></page-hero>
+<?php echo alify_page_hero_fallback_markup( $eyebrow, $heading, wp_strip_all_tags( $copy ), 'neon-lines-01.webp' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- helper escapes all dynamic content. ?>
 <main class="inner-page" id="main-content">
 	<section class="page-section alify-dynamic-archive"><div class="container"><div class="row"><div class="col-12">
 		<?php if ( $copy ) : ?><div class="alify-archive-intro"><?php echo wp_kses_post( $copy ); ?></div><?php endif; ?>

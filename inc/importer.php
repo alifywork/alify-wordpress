@@ -104,9 +104,12 @@ function alify_import_source_media_assets() {
 	$errors    = array();
 	$imported  = 0;
 	$image_dir = wp_normalize_path( ALIFY_THEME_DIR . '/frontend-source/assets/images' );
-	$files     = glob( $image_dir . '/*/*' );
+	if ( ! is_dir( $image_dir ) || ! is_readable( $image_dir ) ) {
+		return array( 'map' => $media_map, 'imported' => 0, 'errors' => array( __( 'The theme source image directory is missing or unreadable.', 'alify' ) ) );
+	}
+	$files = glob( $image_dir . '/*/*' );
 	if ( ! is_array( $files ) ) {
-		return array( 'map' => $media_map, 'imported' => 0, 'errors' => array() );
+		return array( 'map' => $media_map, 'imported' => 0, 'errors' => array( __( 'The theme source image files could not be listed.', 'alify' ) ) );
 	}
 
 	foreach ( $files as $file ) {
@@ -154,7 +157,9 @@ function alify_import_source_media_assets() {
 			continue;
 		}
 
-		$title = sanitize_text_field( ucwords( str_replace( array( '-', '_' ), ' ', pathinfo( basename( $file ), PATHINFO_FILENAME ) ) ) );
+		$asset_label = substr( $relative, strlen( 'assets/images/' ) );
+		$base_title  = ucwords( str_replace( array( '-', '_' ), ' ', pathinfo( basename( $file ), PATHINFO_FILENAME ) ) );
+		$title       = sanitize_text_field( ucwords( str_replace( array( '/', '-', '_' ), ' ', pathinfo( $asset_label, PATHINFO_FILENAME ) ) ) );
 		$attachment_id = wp_insert_attachment(
 			array(
 				'post_mime_type' => $upload['type'],
@@ -181,7 +186,7 @@ function alify_import_source_media_assets() {
 		if ( false !== strpos( $relative, 'assets/images/logo/' ) ) {
 			update_post_meta( $attachment_id, '_wp_attachment_image_alt', __( 'Alify logo', 'alify' ) );
 		} elseif ( false !== strpos( $relative, 'assets/images/industries/' ) ) {
-			update_post_meta( $attachment_id, '_wp_attachment_image_alt', $title . ' industry image' );
+			update_post_meta( $attachment_id, '_wp_attachment_image_alt', $base_title . ' industry image' );
 		}
 		$media_map[ $relative ] = absint( $attachment_id );
 		++$imported;

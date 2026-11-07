@@ -15,6 +15,7 @@ A custom WordPress theme with the supplied Alify front-end converted into PHP te
 - All 39 supplied HTML page bodies are converted to PHP view partials under `template-parts/source-pages/`; WordPress page, archive, single, and taxonomy templates route to them.
 - The original complete source snapshot from `alifywork/alify-web`, branch `arena/08a66435-alify-web`, remains under `frontend-source/` for reference.
 - Bootstrap grid, Font Awesome, GSAP/ScrollTrigger, source CSS/JavaScript, fonts, and images are loaded locally; there is no CDN dependency.
+- Page-hero headings and accessible basic header/footer navigation remain available without JavaScript; when enabled, scripts enhance the server-rendered hero and render the full interactive header/footer components.
 - Static `.html` links and relative asset paths are mapped to WordPress permalinks and theme asset URLs. Without an SEO plugin, source-derived excerpts and archive descriptions provide fallback meta descriptions.
 - Populated CPT/blog archives use live WordPress loops. Empty CPT/blog archives fall back to the source archive design. Search results use a searchable archive grid that preserves the relevant post types; 404 pages offer search, services, and home links.
 - Matching source slugs use their supplied design by default. WordPress editor content or ACF Page Sections can replace the static body; ACF hero fields can override the imported hero.

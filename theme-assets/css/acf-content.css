@@ -1,6 +1,14 @@
 /* WordPress/ACF-authored content and archive layouts, styled to match the imported design. */
 .alify-skip-link{position:fixed;top:12px;left:12px;z-index:100000;padding:12px 18px;transform:translateY(calc(-100% - 16px));border:2px solid var(--color-amber,#f4b740);border-radius:8px;background:#111;color:#fff;font-weight:700;text-decoration:none}
 .alify-skip-link:focus,.alify-skip-link:focus-visible{transform:translateY(0);outline:3px solid #fff;outline-offset:3px}
+site-header,site-footer{display:block}
+.alify-nojs-header,.alify-nojs-footer{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:18px;padding:18px clamp(20px,5vw,72px);background:#111;color:#fff}
+.alify-nojs-header a,.alify-nojs-footer a{color:inherit;text-decoration:none}
+.alify-nojs-header a:hover,.alify-nojs-header a:focus-visible,.alify-nojs-footer a:hover,.alify-nojs-footer a:focus-visible{color:var(--color-amber,#f4b740);text-decoration:underline}
+.alify-nojs-header__brand{font-size:1.3rem;font-weight:800;letter-spacing:.08em}
+.alify-nojs-header nav ul,.alify-nojs-footer nav{display:flex;flex-wrap:wrap;gap:16px;margin:0;padding:0;list-style:none}
+.alify-nojs-footer{justify-content:center;padding-block:28px;text-align:center}
+.alify-nojs-footer p{margin:0}
 .alify-content-cards,.alify-archive-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px;margin-top:32px}
 .alify-content-card,.alify-archive-card{overflow:hidden;border:1px solid rgba(255,255,255,.12);border-radius:20px;background:rgba(255,255,255,.035);color:inherit}
 .alify-content-card>img,.alify-archive-card__media img{display:block;width:100%;height:220px;object-fit:cover}

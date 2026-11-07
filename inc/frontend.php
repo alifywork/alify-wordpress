@@ -8,6 +8,47 @@ function alify_source_assets_uri() {
 	return trailingslashit( ALIFY_THEME_URI ) . 'frontend-source/assets';
 }
 
+/** Render an accessible server-side fallback inside the client-enhanced page hero. */
+function alify_page_hero_fallback_markup( $eyebrow, $title, $description, $background = 'neon-lines-01.webp', $variant = '' ) {
+	$background = is_string( $background ) && preg_match( '/^neon-lines-(?:0[1-9]|1[0-4])\\.webp$/', $background ) ? $background : 'neon-lines-01.webp';
+	$variant    = is_string( $variant ) && in_array( $variant, array( 'mirror-right', 'close-up', 'soft-focus' ), true ) ? $variant : '';
+	$variant_class = $variant ? ' page-hero--' . $variant : '';
+	$asset_url     = esc_url( trailingslashit( alify_source_assets_uri() ) . 'images/background/' . $background );
+	$eyebrow       = is_scalar( $eyebrow ) ? (string) $eyebrow : 'Alify';
+	$title         = is_scalar( $title ) ? (string) $title : get_bloginfo( 'name' );
+	$description   = is_scalar( $description ) ? (string) $description : '';
+
+	return '<page-hero eyebrow="' . esc_attr( $eyebrow ) . '" title="' . esc_attr( $title ) . '" description="' . esc_attr( $description ) . '" background="' . esc_attr( $background ) . '" variant="' . esc_attr( $variant ) . '">'
+		. '<div class="page-hero' . esc_attr( $variant_class ) . '"><div class="page-hero__media" aria-hidden="true"><img src="' . $asset_url . '" alt="" width="1920" height="1080" fetchpriority="high"></div>'
+		. '<section class="page-hero__section" aria-labelledby="page-hero-title"><div class="container page-hero__container"><div class="row"><div class="col-12"><div class="page-hero__content">'
+		. '<p class="page-hero__eyebrow">' . esc_html( $eyebrow ) . '</p><h1 class="page-hero__title" id="page-hero-title">' . esc_html( $title ) . '</h1><p class="page-hero__description">' . esc_html( $description ) . '</p>'
+		. '</div></div></div></div></section></div></page-hero>';
+}
+
+/** Add no-JavaScript hero content; the custom element enhances this markup when scripts load. */
+function alify_add_page_hero_fallbacks( $markup ) {
+	return preg_replace_callback(
+		'~<page-hero\\b([^>]*)>\\s*</page-hero\\s*>~i',
+		function ( $matches ) {
+			$attributes = shortcode_parse_atts( $matches[1] );
+			$attributes = is_array( $attributes ) ? $attributes : array();
+			foreach ( array( 'eyebrow', 'title', 'description', 'background', 'variant' ) as $key ) {
+				if ( isset( $attributes[ $key ] ) && is_scalar( $attributes[ $key ] ) ) {
+					$attributes[ $key ] = html_entity_decode( (string) $attributes[ $key ], ENT_QUOTES | ENT_HTML5, 'UTF-8' );
+				}
+			}
+			return alify_page_hero_fallback_markup(
+				$attributes['eyebrow'] ?? 'Alify',
+				$attributes['title'] ?? get_bloginfo( 'name' ),
+				$attributes['description'] ?? '',
+				$attributes['background'] ?? 'neon-lines-01.webp',
+				$attributes['variant'] ?? ''
+			);
+		},
+		$markup
+	);
+}
+
 /** Normalize social profile rows before passing them to browser-facing code. */
 function alify_normalize_social_link( $row ) {
 	if ( ! is_array( $row ) || ! isset( $row['label'], $row['url'] ) || ! is_scalar( $row['label'] ) || ! is_scalar( $row['url'] ) || '' === $row['label'] || '' === $row['url'] ) {
@@ -322,7 +363,7 @@ function alify_render_acf_page_builder() {
 		$background = 'neon-lines-01.webp';
 	}
 	?>
-	<page-hero eyebrow="<?php echo esc_attr( $eyebrow ); ?>" title="<?php echo esc_attr( $hero_title ); ?>" description="<?php echo esc_attr( $description ); ?>" background="<?php echo esc_attr( $background ); ?>"></page-hero>
+	<?php echo alify_page_hero_fallback_markup( $eyebrow, $hero_title, $description, $background ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- helper escapes all dynamic content. ?>
 	<main class="inner-page" id="main-content">
 	<?php
 	while ( have_rows( 'page_sections' ) ) :
@@ -421,6 +462,7 @@ function alify_render_editable_source_content( $slug ) {
 		return false;
 	}
 	$content = alify_prepare_editable_source_content( $content, $slug );
+	$content = alify_add_page_hero_fallbacks( $content );
 	if ( get_post_meta( get_queried_object_id(), '_alify_source_content_imported', true ) ) {
 		$content = do_blocks( $content );
 		$content = do_shortcode( $content );
@@ -540,7 +582,8 @@ function alify_render_source_view( $slug ) {
 		},
 		$markup
 	);
-	echo $markup; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- trusted, bundled theme markup; attributes are normalized above.
+	$markup = alify_add_page_hero_fallbacks( $markup );
+	echo $markup; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- trusted, bundled theme markup; dynamic hero values are escaped in the fallback renderer.
 	return true;
 }
 
