@@ -221,8 +221,12 @@ function alify_form_shortcode( $attributes ) {
 				<?php endif; ?>
 			</div>
 		<?php endforeach; ?>
-		<?php $privacy_page = function_exists( 'get_field' ) ? absint( get_field( 'forms_privacy_page', 'option' ) ) : 0; ?>
-		<div class="form-field alify-form-consent"><label><input type="checkbox" name="privacyConsent" value="Accepted" required> <?php esc_html_e( 'I agree to the use of my information to respond to this inquiry.', 'alify' ); ?><?php if ( $privacy_page ) : ?> <a href="<?php echo esc_url( get_permalink( $privacy_page ) ); ?>"><?php esc_html_e( 'Read our Privacy Policy.', 'alify' ); ?></a><?php endif; ?></label></div>
+		<?php
+		$privacy_page = function_exists( 'get_field' ) ? absint( get_field( 'forms_privacy_page', 'option' ) ) : 0;
+		$privacy_url  = $privacy_page && 'publish' === get_post_status( $privacy_page ) ? get_permalink( $privacy_page ) : '';
+		$privacy_url  = $privacy_url ? $privacy_url : alify_source_url( 'privacy-policy' );
+		?>
+		<div class="form-field form-consent alify-form-consent"><label for="<?php echo esc_attr( $form_instance . 'privacyConsent' ); ?>"><input id="<?php echo esc_attr( $form_instance . 'privacyConsent' ); ?>" type="checkbox" name="privacyConsent" value="Accepted" required> <?php esc_html_e( 'I agree to the use of my information to respond to this inquiry.', 'alify' ); ?></label> <a href="<?php echo esc_url( $privacy_url ); ?>"><?php esc_html_e( 'Read our Privacy Policy.', 'alify' ); ?></a></div>
 		<div class="alify-honeypot" aria-hidden="true"><label for="alify-company-website-<?php echo esc_attr( $form_instance ); ?>"><?php esc_html_e( 'Leave this field empty', 'alify' ); ?><input id="alify-company-website-<?php echo esc_attr( $form_instance ); ?>" name="alify_company_website" type="text" tabindex="-1" autocomplete="off"></label></div>
 		<button class="button button--primary" type="submit"><?php echo esc_html( $attributes['submit_label'] ); ?> <i class="fa-solid fa-arrow-right icon-arrow-up-right" aria-hidden="true"></i></button>
 	</form>
@@ -230,6 +234,15 @@ function alify_form_shortcode( $attributes ) {
 	return ob_get_clean();
 }
 add_shortcode( 'alify_form', 'alify_form_shortcode' );
+
+/** Build accessible required privacy consent with a separate, keyboard-operable policy link. */
+function alify_source_privacy_consent_markup( $source ) {
+	$source       = sanitize_html_class( $source );
+	$privacy_page = function_exists( 'get_field' ) ? absint( get_field( 'forms_privacy_page', 'option' ) ) : 0;
+	$privacy_url  = $privacy_page && 'publish' === get_post_status( $privacy_page ) ? get_permalink( $privacy_page ) : '';
+	$privacy_url  = $privacy_url ? $privacy_url : alify_source_url( 'privacy-policy' );
+	return '<div class="form-consent form-field--full"><label for="alify-privacy-consent-' . esc_attr( $source ) . '"><input id="alify-privacy-consent-' . esc_attr( $source ) . '" type="checkbox" name="privacyConsent" value="Accepted" required><span>' . esc_html__( 'I agree that these details may be used to respond to my inquiry.', 'alify' ) . '</span></label><a href="' . esc_url( $privacy_url ) . '">' . esc_html__( 'Read our Privacy Policy.', 'alify' ) . '</a></div>';
+}
 
 /** Add nonce, source key, redirect, consent, and honeypot to supplied inquiry designs. */
 function alify_prepare_source_inquiry( $markup, $source ) {
@@ -256,13 +269,10 @@ function alify_prepare_source_inquiry( $markup, $source ) {
 		$hidden = '<p class="alify-form-notice alify-form-notice--' . esc_attr( $status ) . '" role="status">' . esc_html( $message ) . '</p>' . $hidden;
 	}
 
-	// The homepage source form predates the privacy field used on the dedicated forms.
-	if ( 'index' === $source && ! preg_match( '~\bname=("|\x27)privacyConsent\1~i', $markup ) ) {
-		$privacy_page = function_exists( 'get_field' ) ? absint( get_field( 'forms_privacy_page', 'option' ) ) : 0;
-		$privacy_url  = $privacy_page ? get_permalink( $privacy_page ) : alify_source_url( 'privacy-policy' );
-		$consent      = '<div class="form-consent form-field--full"><label><input type="checkbox" name="privacyConsent" value="Accepted" required><span>'
-			. esc_html__( 'I agree that these details may be used to respond to my inquiry.', 'alify' ) . ' <a href="' . esc_url( $privacy_url ) . '">' . esc_html__( 'Read our Privacy Policy.', 'alify' ) . '</a></span></label></div>';
-		$markup = preg_replace_callback(
+	// Ensure every fixed inquiry design has consent, with a policy link outside its label.
+	if ( ! preg_match( '~\bname=("|\x27)privacyConsent\1~i', $markup ) ) {
+		$consent = alify_source_privacy_consent_markup( $source_key );
+		$markup  = preg_replace_callback(
 			'~</form>~i',
 			function ( $matches ) use ( $consent ) {
 				return $consent . $matches[0];
@@ -270,6 +280,18 @@ function alify_prepare_source_inquiry( $markup, $source ) {
 			$markup,
 			1
 		);
+	} else {
+		$consent = alify_source_privacy_consent_markup( $source_key );
+		$markup  = preg_replace_callback(
+			'~<div\s+class="[^"]*\bform-consent\b[^"]*"[^>]*>.*?</div>~is',
+			function () use ( $consent ) {
+				return $consent;
+			},
+			$markup,
+			1
+		);
+	}
+	if ( 'index' === $source ) {
 		// This mailto-only result panel is superseded by the server response notice.
 		$markup = preg_replace( '~<div\s+class="inquiry-form__result"[^>]*data-inquiry-result[^>]*>.*?</div>~is', '', $markup, 1 );
 	}
