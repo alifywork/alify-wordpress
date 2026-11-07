@@ -175,6 +175,19 @@ function alify_output_meta_description() {
 }
 add_action( 'wp_head', 'alify_output_meta_description', 2 );
 
+/** Add canonical URLs to archives/front pages where WordPress core does not emit one. */
+function alify_output_archive_canonical() {
+	if ( alify_seo_plugin_active() || is_search() || is_404() || is_singular() || ( ! is_archive() && ! is_home() ) ) {
+		return;
+	}
+	$url = get_pagenum_link( max( 1, absint( get_query_var( 'paged' ) ) ) );
+	$url = esc_url_raw( $url ? $url : home_url( '/' ), array( 'http', 'https' ) );
+	if ( $url ) {
+		echo '<link rel="canonical" href="' . esc_url( $url ) . '">' . "\n";
+	}
+}
+add_action( 'wp_head', 'alify_output_archive_canonical', 3 );
+
 /** Return validated social-image metadata from an attachment. */
 function alify_get_social_image_from_attachment( $attachment_id ) {
 	$attachment_id = absint( $attachment_id );
