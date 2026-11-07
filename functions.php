@@ -18,4 +18,5 @@ require_once ALIFY_THEME_DIR . '/inc/acf.php';
 require_once ALIFY_THEME_DIR . '/inc/forms.php';
 require_once ALIFY_THEME_DIR . '/inc/forms-export.php';
 require_once ALIFY_THEME_DIR . '/inc/frontend.php';
+require_once ALIFY_THEME_DIR . '/inc/editor.php';
 require_once ALIFY_THEME_DIR . '/inc/importer.php';

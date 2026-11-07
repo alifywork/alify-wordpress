@@ -26,12 +26,12 @@ ACF Pro is optional for activation. When active it adds Theme Settings and field
 ## First-time setup
 
 1. Activate the theme and optionally activate ACF Pro.
-2. Go to **Appearance → Alify Setup** and click **Create / Repair Starter Pages & Content**. This creates the Pages, Services, Work, Case Studies, Industries, and Blog posts required by the source links, along with source-derived editable excerpts and local source-image references. It is safe to rerun and preserves matching records and editor-authored excerpts.
+2. Go to **Appearance → Alify Setup** and click **Create / Repair Starter Pages & Content**. This creates the Pages, Services, Work, Case Studies, Industries, and Blog posts required by the source links, along with the source hero and main body as editable WordPress content, plus source-derived excerpts and local image references. It is safe to rerun and preserves matching records, existing body content, and editor-authored excerpts.
 3. Set the homepage and Posts page under **Settings → Reading** if they are not already selected.
 4. Assign Primary and Footer menus under **Appearance → Menus**. Without assigned menus, the supplied navigation remains as a fallback.
 5. Save **Settings → Permalinks** once after activation to refresh rewrite rules.
 
-The importer adds starter titles, slugs, source-derived summaries, and optional image references, but does not duplicate the static HTML into editable body content. PHP source views supply the original presentation; use the WordPress editor or ACF Page Sections to replace the source design with custom content. The dynamic archive cards display the editable excerpts.
+The importer extracts each source page hero and main body into the WordPress editor once, while preserving the converted PHP view as the default presentation. In the Alify Page Presentation box, choose **WordPress editor content** to publish your edited body, or leave **Original Alify design** selected. Rerunning setup never overwrites a non-empty body or excerpt. ACF Page Sections remain available as a structured alternative, and dynamic archive cards display editable excerpts.
 
 ## Forms and entries
 

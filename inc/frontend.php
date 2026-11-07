@@ -276,6 +276,50 @@ function alify_build_source_routes() {
 	return $routes;
 }
 
+/** Rewrite source-relative URLs and make imported inquiry markup use the server handler. */
+function alify_prepare_editable_source_content( $content, $slug ) {
+	$content = preg_replace_callback(
+		'~\\b(src|poster)=("|\\x27)assets/([^"\\x27]+)\\2~i',
+		function ( $matches ) {
+			return $matches[1] . '=' . $matches[2] . esc_url( trailingslashit( alify_source_assets_uri() ) . $matches[3] ) . $matches[2];
+		},
+		$content
+	);
+	$content = preg_replace_callback(
+		'~\\bhref=("|\\x27)([^"\\x27]+\\.html(?:[?#][^"\\x27]*)?)\\1~i',
+		function ( $matches ) {
+			$link = $matches[2];
+			if ( preg_match( '~^(?:[a-z][a-z0-9+.-]*:)?//~i', $link ) || ! preg_match( '~^([^?#]+\\.html)([?#].*)?$~i', $link, $parts ) ) {
+				return $matches[0];
+			}
+			$slug = sanitize_title( basename( $parts[1], '.html' ) );
+			return 'href=' . $matches[1] . esc_url( alify_source_url( $slug ) . ( isset( $parts[2] ) ? $parts[2] : '' ) ) . $matches[1];
+		},
+		$content
+	);
+	if ( function_exists( 'alify_prepare_source_inquiry' ) ) {
+		$content = alify_prepare_source_inquiry( $content, $slug );
+	}
+	return $content;
+}
+
+/** Render imported/editor-authored content when the editor selects that mode. */
+function alify_render_editable_source_content( $slug ) {
+	$content = get_post_field( 'post_content', get_queried_object_id() );
+	if ( ! is_string( $content ) || '' === trim( $content ) ) {
+		return false;
+	}
+	$content = alify_prepare_editable_source_content( $content, $slug );
+	if ( get_post_meta( get_queried_object_id(), '_alify_source_content_imported', true ) ) {
+		$content = do_blocks( $content );
+		$content = do_shortcode( $content );
+		echo $content; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- trusted editor/source markup rendered as saved HTML.
+	} else {
+		echo apply_filters( 'the_content', $content ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- trusted editor content filtered by WordPress.
+	}
+	return true;
+}
+
 /**
  * Include a converted source view and translate relative asset and .html links
  * into theme-asset and WordPress URLs.
@@ -287,14 +331,24 @@ function alify_render_source_view( $slug ) {
 		return false;
 	}
 
+	if ( is_singular() ) {
+		$post_id = get_queried_object_id();
+		$mode    = get_post_meta( $post_id, '_alify_content_mode', true );
+		if ( 'content' === $mode && alify_render_editable_source_content( $slug ) ) {
+			return true;
+		}
+	}
 	if ( is_singular() && alify_render_acf_page_builder() ) {
 		return true;
 	}
-	if ( is_singular() && trim( (string) get_post_field( 'post_content', get_queried_object_id() ) ) !== '' ) {
-		?>
-		<main class="inner-page" id="main-content"><div class="container"><div class="row"><div class="col-12"><article <?php post_class(); ?>><h1><?php the_title(); ?></h1><div class="entry-content"><?php the_content(); ?></div></article></div></div></div></main>
-		<?php
-		return true;
+	if ( is_singular() ) {
+		$post_id      = get_queried_object_id();
+		$post_content = trim( (string) get_post_field( 'post_content', $post_id ) );
+		$mode         = get_post_meta( $post_id, '_alify_content_mode', true );
+		$imported     = get_post_meta( $post_id, '_alify_source_content_imported', true );
+		if ( ! $imported && 'source' !== $mode && '' !== $post_content && alify_render_editable_source_content( $slug ) ) {
+			return true;
+		}
 	}
 
 	ob_start();
