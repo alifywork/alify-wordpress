@@ -25,7 +25,7 @@ if ( is_tax() || is_category() || is_tag() ) {
 			<?php while ( have_posts() ) : the_post(); ?>
 				<article <?php post_class( 'alify-archive-card' ); ?>>
 					<a class="alify-archive-card__media" href="<?php echo esc_url( get_permalink() ); ?>" tabindex="-1" aria-hidden="true">
-						<?php if ( has_post_thumbnail() ) : the_post_thumbnail( 'large', array( 'loading' => 'lazy' ) ); ?><?php else : ?><span class="alify-archive-card__placeholder" aria-hidden="true"></span><?php endif; ?>
+						<?php if ( has_post_thumbnail() ) : the_post_thumbnail( 'large', array( 'loading' => 'lazy' ) ); else : $source_image = get_post_meta( get_the_ID(), '_alify_source_image', true ); if ( $source_image && preg_match( '~^assets/images/[A-Za-z0-9/_ .-]+$~', $source_image ) ) : ?><img src="<?php echo esc_url( trailingslashit( ALIFY_THEME_URI ) . 'frontend-source/' . $source_image ); ?>" alt="<?php echo esc_attr( get_the_title() ); ?>" loading="lazy"><?php else : ?><span class="alify-archive-card__placeholder" aria-hidden="true"></span><?php endif; endif; ?>
 					</a>
 					<div class="alify-archive-card__copy">
 						<?php $first_term = false; foreach ( get_object_taxonomies( get_post_type() ) as $taxonomy_name ) { $post_terms = get_the_terms( get_the_ID(), $taxonomy_name ); if ( ! is_wp_error( $post_terms ) && ! empty( $post_terms ) ) { $first_term = $post_terms[0]; break; } } if ( $first_term ) : ?><p class="page-eyebrow"><?php echo esc_html( $first_term->name ); ?></p><?php endif; ?>

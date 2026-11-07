@@ -47,14 +47,14 @@ function alify_enqueue_frontend_assets() {
 		'header'        => array( 'theme-assets/js/header-wordpress.js', array( 'alify-wp-integration' ) ),
 		'footer'        => array( 'theme-assets/js/footer-wordpress.js', array( 'alify-wp-integration' ) ),
 		'page-hero'     => array( 'theme-assets/js/page-hero-wordpress.js', array( 'alify-gsap', 'alify-scrolltrigger' ) ),
-		'pages'         => array( 'js/pages.js', array( 'alify-gsap', 'alify-scrolltrigger' ) ),
+		'pages'         => array( 'theme-assets/js/pages-wordpress.js', array( 'alify-gsap', 'alify-scrolltrigger', 'alify-wp-integration' ) ),
 		'main'          => array( 'js/main.js', array( 'alify-gsap', 'alify-scrolltrigger' ) ),
 		'home'          => array( 'js/home.js', array( 'alify-gsap' ) ),
 	);
 
 	foreach ( $js_files as $handle => $details ) {
 		$relative_path = $details[0];
-		$is_theme_script = in_array( $handle, array( 'wp-integration', 'header', 'footer', 'page-hero' ), true );
+		$is_theme_script = in_array( $handle, array( 'wp-integration', 'header', 'footer', 'page-hero', 'pages' ), true );
 		$file           = $is_theme_script ? ALIFY_THEME_DIR . '/' . $relative_path : ALIFY_THEME_DIR . '/frontend-source/assets/' . $relative_path;
 		$script_uri     = $is_theme_script ? ALIFY_THEME_URI . '/' . $relative_path : $base . '/' . $relative_path;
 		wp_enqueue_script(
@@ -90,6 +90,8 @@ function alify_enqueue_frontend_assets() {
 			'headerCtaUrl'     => function_exists( 'get_field' ) ? (string) get_field( 'header_cta_url', 'option' ) : '',
 			'footerCopyright'  => function_exists( 'get_field' ) ? (string) get_field( 'footer_copyright', 'option' ) : '',
 			'contactEmail'     => function_exists( 'get_field' ) ? (string) get_field( 'contact_email', 'option' ) : '',
+			'contactPhone'     => function_exists( 'get_field' ) ? (string) get_field( 'contact_phone', 'option' ) : '',
+			'businessAddress'  => function_exists( 'get_field' ) ? (string) get_field( 'business_address', 'option' ) : '',
 			'primaryMenuHtml'  => $primary_menu ? wp_kses_post( $primary_menu ) : '',
 			'footerMenuHtml'   => $footer_menu ? wp_kses_post( $footer_menu ) : '',
 		)
@@ -201,7 +203,7 @@ function alify_render_acf_page_builder() {
 			<section class="page-section"><div class="container"><div class="row"><div class="col-12"><div class="detail-heading">
 				<?php if ( get_sub_field( 'eyebrow' ) ) : ?><p class="page-eyebrow"><?php echo esc_html( get_sub_field( 'eyebrow' ) ); ?></p><?php endif; ?>
 				<?php if ( get_sub_field( 'heading' ) ) : ?><h2 class="page-title"><?php echo esc_html( get_sub_field( 'heading' ) ); ?></h2><?php endif; ?>
-				<div class="page-lead"><?php echo wp_kses_post( get_sub_field( 'body' ) ); ?></div>
+				<div class="page-lead"><?php echo do_shortcode( wp_kses_post( get_sub_field( 'body' ) ) ); ?></div>
 			</div></div></div></div></section>
 			<?php
 		elseif ( 'image_text' === $layout ) :
@@ -210,7 +212,7 @@ function alify_render_acf_page_builder() {
 			<section class="page-section"><div class="container"><div class="row"><div class="col-12"><div class="story-editorial">
 				<?php if ( is_array( $image ) && ! empty( $image['ID'] ) ) : ?><div class="story-editorial__image"><?php echo wp_get_attachment_image( $image['ID'], 'large', false, array( 'alt' => esc_attr( get_sub_field( 'image_alt' ) ) ) ); ?></div><?php endif; ?>
 				<div class="story-editorial__copy"><?php if ( get_sub_field( 'eyebrow' ) ) : ?><p class="page-eyebrow"><?php echo esc_html( get_sub_field( 'eyebrow' ) ); ?></p><?php endif; ?>
-					<?php if ( get_sub_field( 'heading' ) ) : ?><h2><?php echo esc_html( get_sub_field( 'heading' ) ); ?></h2><?php endif; ?><div><?php echo wp_kses_post( get_sub_field( 'body' ) ); ?></div></div>
+					<?php if ( get_sub_field( 'heading' ) ) : ?><h2><?php echo esc_html( get_sub_field( 'heading' ) ); ?></h2><?php endif; ?><div><?php echo do_shortcode( wp_kses_post( get_sub_field( 'body' ) ) ); ?></div></div>
 			</div></div></div></div></section>
 			<?php
 		elseif ( 'card_grid' === $layout ) :
@@ -299,6 +301,9 @@ function alify_render_source_view( $slug ) {
 				$markup
 			);
 		}
+	}
+	if ( in_array( $slug, array( 'contact', 'start-project' ), true ) && function_exists( 'alify_prepare_source_inquiry' ) ) {
+		$markup = alify_prepare_source_inquiry( $markup, $slug );
 	}
 	$markup = str_replace( 'assets/', esc_url( alify_source_assets_uri() ) . '/', $markup );
 	$markup = preg_replace_callback(

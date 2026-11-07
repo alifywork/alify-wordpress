@@ -73,6 +73,24 @@ window.alifyFixThemeMarkup = function (root) {
       if (icon) link.append(icon);
     });
   }
+  if (config.contactPhone) {
+    root.querySelectorAll(".footer__contact-card").forEach((card) => {
+      const phone = document.createElement("a");
+      phone.className = "footer__contact-page";
+      phone.href = `tel:${config.contactPhone.replace(/[^+0-9]/g, "")}`;
+      phone.textContent = config.contactPhone;
+      card.append(phone);
+    });
+  }
+  if (config.businessAddress) {
+    root.querySelectorAll(".footer__contact-card").forEach((card) => {
+      const address = document.createElement("p");
+      address.className = "footer__business-address";
+      address.textContent = config.businessAddress;
+      card.append(address);
+    });
+  }
+
   if (config.footerCopyright) {
     root.querySelectorAll(".footer__bottom [data-current-year]").forEach((year) => {
       const parent = year.parentElement;
