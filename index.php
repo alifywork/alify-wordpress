@@ -1,6 +1,9 @@
 <?php
-/**
- * Intentionally empty frontend entry point.
- * Front-end markup and presentation will be implemented after design/content
- * direction is provided. See README.md for the registered content structure.
- */
+/** WordPress fallback template. */
+get_header();
+if ( is_front_page() ) {
+	alify_render_source_view( 'index' );
+} else {
+	get_template_part( 'template-parts/content', 'fallback' );
+}
+get_footer();

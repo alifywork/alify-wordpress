@@ -1,28 +1,36 @@
 # Alify Custom WordPress Theme
 
-A backend-first theme foundation. The front-end designs and rendering have intentionally **not** been implemented yet, per project direction.
+A custom WordPress theme scaffold with the supplied Alify static front-end converted into PHP templates. The imported design is the visual fallback; WordPress content and optional ACF Pro Flexible Content can provide dynamic replacements.
 
-## Included structure
+## Content model
 
 - Public custom post types: Services, Work, Case Studies, Industries, FAQs, Pricing, Testimonials.
-- Category and tag taxonomies for each custom post type.
-- Blog remains WordPress core Posts, Categories, Tags, and the default single-post system.
+- Each custom post type has its own hierarchical category taxonomy and non-hierarchical tag taxonomy.
+- Blog uses WordPress core Posts, Categories, Tags, and the default single-post system.
 - Navigation locations: Primary Menu and Footer Menu.
-- Optional ACF Pro integration: Theme Settings options pages and starter settings/form field groups. The theme continues to load if ACF Pro is not activated; its options pages appear after ACF Pro is installed and active.
-- Admin-managed Form, Form Template, and Form Entry post types. Form fields/configuration use an ACF repeater; entries have admin columns and a submitted-data detail box.
-- WordPress permalink template files for custom post type archives, singles, and taxonomy archives, plus page-template placeholders for the requested standard pages. These are intentionally blank placeholders until frontend designs are supplied.
+- Admin-managed Form, Form Template, and Form Entry post types. ACF Pro provides form field configuration and settings; entries have admin columns and a submitted-data detail box.
 
-## Requested page templates
+## Front-end conversion
 
-Use the page editor's Template selector to choose Home Page, About Us, Contact Us, Start Project, or Legal Page. Set the Home Page under **Settings → Reading** as the static front page.
+- All 39 supplied HTML page bodies are converted to PHP view partials in `template-parts/source-pages/` and routed through WordPress page, archive, single, and taxonomy templates.
+- The original complete source snapshot from `alifywork/alify-web`, branch `arena/08a66435-alify-web`, remains under `frontend-source/` for reference.
+- Bootstrap grid, Font Awesome, GSAP/ScrollTrigger, all source CSS/JavaScript, fonts, and images are served locally from the imported assets; no CDN is required.
+- Static `.html` links and relative media paths are translated to WordPress permalinks and theme asset URLs.
+- Populated archives use live WordPress loops. If a CPT/blog archive is empty, the imported archive view is displayed as a visual starter.
+- Matching source slugs display their supplied design by default. Adding WordPress editor content or ACF Page Sections replaces the static body; ACF hero fields can override the imported hero.
 
-## Important notes
+## ACF Pro
 
-- After activating the theme, visit **Settings → Permalinks** and save once to refresh rewrite rules.
-- The forms area is currently a backend data/configuration scaffold only. There is no public form renderer, submission endpoint, validation, email delivery, or spam protection yet, because frontend work was explicitly deferred.
-- The form entry type is private and is not exposed in public search or REST API.
-- The duplicated Testimonials request was treated as one content type.
+ACF Pro is optional for theme activation. When active, it adds Theme Settings and fields for general details, header/footer settings, forms, and a Flexible Content page builder with text, image/text, card grid, FAQ, and CTA layouts. Without ACF Pro, imported static views and WordPress editor content still work.
 
-## Imported static-site source
+## Setup
 
-The complete source snapshot from `alifywork/alify-web`, branch `arena/08a66435-alify-web`, is preserved in `frontend-source/`. It is kept as a separate directory so none of its static files overwrite this WordPress theme's PHP entry points or theme documentation. The snapshot includes the original HTML pages, assets, and project documentation; it is not yet converted into WordPress templates or wired to the ACF content model.
+1. Activate the theme and install/activate ACF Pro if desired.
+2. Create WordPress Pages or CPT entries with matching source slugs to make the corresponding designs reachable. Examples: pages `about`, `contact`, `start-project`, `privacy-policy`; Services `web-development`, `seo`; archive URLs are registered with their CPTs.
+3. Assign Primary and Footer menus under **Appearance → Menus**. Assigned WordPress menus replace the source navigation; otherwise the supplied navigation remains.
+4. Set the static homepage and optional Posts page under **Settings → Reading**.
+5. Save **Settings → Permalinks** once after activation to refresh rewrite rules.
+
+## Form limitation
+
+Contact and Start Project keep the supplied client-side `mailto:` flow. Public form rendering, server-side submission/validation, entry creation, email delivery, and spam protection are not connected yet. The Forms/Entries admin structures are ready for that next step. The duplicated Testimonials item from the original request is implemented once.

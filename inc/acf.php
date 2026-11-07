@@ -106,6 +106,90 @@ function alify_register_acf_fields() {
 
 	acf_add_local_field_group(
 		array(
+			'key' => 'group_alify_content_builder',
+			'title' => __( 'Alify Page Content', 'alify' ),
+			'fields' => array(
+				array( 'key' => 'field_alify_hero_eyebrow', 'label' => __( 'Hero Eyebrow', 'alify' ), 'name' => 'hero_eyebrow', 'type' => 'text' ),
+				array( 'key' => 'field_alify_hero_title', 'label' => __( 'Hero Title', 'alify' ), 'name' => 'hero_title', 'type' => 'text' ),
+				array( 'key' => 'field_alify_hero_description', 'label' => __( 'Hero Description', 'alify' ), 'name' => 'hero_description', 'type' => 'textarea', 'rows' => 3 ),
+				array( 'key' => 'field_alify_hero_background', 'label' => __( 'Hero Background', 'alify' ), 'name' => 'hero_background', 'type' => 'select', 'choices' => array(
+					'neon-lines-01.webp' => 'Neon 01', 'neon-lines-02.webp' => 'Neon 02', 'neon-lines-03.webp' => 'Neon 03', 'neon-lines-04.webp' => 'Neon 04',
+					'neon-lines-05.webp' => 'Neon 05', 'neon-lines-06.webp' => 'Neon 06', 'neon-lines-07.webp' => 'Neon 07', 'neon-lines-08.webp' => 'Neon 08',
+					'neon-lines-09.webp' => 'Neon 09', 'neon-lines-10.webp' => 'Neon 10', 'neon-lines-11.webp' => 'Neon 11', 'neon-lines-12.webp' => 'Neon 12',
+					'neon-lines-13.webp' => 'Neon 13', 'neon-lines-14.webp' => 'Neon 14',
+			), 'ui' => 1 ),
+				array( 'key' => 'field_alify_page_sections', 'label' => __( 'Page Sections', 'alify' ), 'name' => 'page_sections', 'type' => 'flexible_content', 'button_label' => __( 'Add Section', 'alify' ), 'layouts' => array(
+					'layout_alify_text_section' => array(
+						'key' => 'layout_alify_text_section', 'name' => 'text_section', 'label' => __( 'Text Section', 'alify' ), 'display' => 'block',
+						'sub_fields' => array(
+							array( 'key' => 'field_alify_text_eyebrow', 'label' => __( 'Eyebrow', 'alify' ), 'name' => 'eyebrow', 'type' => 'text' ),
+							array( 'key' => 'field_alify_text_heading', 'label' => __( 'Heading', 'alify' ), 'name' => 'heading', 'type' => 'text' ),
+							array( 'key' => 'field_alify_text_body', 'label' => __( 'Body', 'alify' ), 'name' => 'body', 'type' => 'wysiwyg', 'tabs' => 'visual', 'toolbar' => 'basic', 'media_upload' => 0 ),
+						),
+					),
+					'layout_alify_image_text' => array(
+						'key' => 'layout_alify_image_text', 'name' => 'image_text', 'label' => __( 'Image & Text', 'alify' ), 'display' => 'block',
+						'sub_fields' => array(
+							array( 'key' => 'field_alify_image_text_eyebrow', 'label' => __( 'Eyebrow', 'alify' ), 'name' => 'eyebrow', 'type' => 'text' ),
+							array( 'key' => 'field_alify_image_text_heading', 'label' => __( 'Heading', 'alify' ), 'name' => 'heading', 'type' => 'text' ),
+							array( 'key' => 'field_alify_image_text_body', 'label' => __( 'Body', 'alify' ), 'name' => 'body', 'type' => 'wysiwyg', 'tabs' => 'visual', 'toolbar' => 'basic', 'media_upload' => 0 ),
+							array( 'key' => 'field_alify_image_text_image', 'label' => __( 'Image', 'alify' ), 'name' => 'image', 'type' => 'image', 'return_format' => 'array', 'preview_size' => 'medium' ),
+							array( 'key' => 'field_alify_image_text_alt', 'label' => __( 'Image Alt Text', 'alify' ), 'name' => 'image_alt', 'type' => 'text' ),
+						),
+					),
+					'layout_alify_card_grid' => array(
+						'key' => 'layout_alify_card_grid', 'name' => 'card_grid', 'label' => __( 'Card Grid', 'alify' ), 'display' => 'block',
+						'sub_fields' => array(
+							array( 'key' => 'field_alify_cards_eyebrow', 'label' => __( 'Eyebrow', 'alify' ), 'name' => 'eyebrow', 'type' => 'text' ),
+							array( 'key' => 'field_alify_cards_heading', 'label' => __( 'Heading', 'alify' ), 'name' => 'heading', 'type' => 'text' ),
+							array( 'key' => 'field_alify_cards_items', 'label' => __( 'Cards', 'alify' ), 'name' => 'cards', 'type' => 'repeater', 'layout' => 'row', 'button_label' => __( 'Add Card', 'alify' ), 'sub_fields' => array(
+								array( 'key' => 'field_alify_card_title', 'label' => __( 'Title', 'alify' ), 'name' => 'title', 'type' => 'text', 'required' => 1 ),
+								array( 'key' => 'field_alify_card_copy', 'label' => __( 'Description', 'alify' ), 'name' => 'copy', 'type' => 'textarea', 'rows' => 2 ),
+								array( 'key' => 'field_alify_card_image', 'label' => __( 'Image', 'alify' ), 'name' => 'image', 'type' => 'image', 'return_format' => 'array', 'preview_size' => 'thumbnail' ),
+								array( 'key' => 'field_alify_card_url', 'label' => __( 'Link URL', 'alify' ), 'name' => 'url', 'type' => 'url' ),
+							), ),
+						),
+					),
+					'layout_alify_faq_group' => array(
+						'key' => 'layout_alify_faq_group', 'name' => 'faq_group', 'label' => __( 'FAQ Group', 'alify' ), 'display' => 'block',
+						'sub_fields' => array(
+							array( 'key' => 'field_alify_faq_group_heading', 'label' => __( 'Heading', 'alify' ), 'name' => 'heading', 'type' => 'text' ),
+							array( 'key' => 'field_alify_faq_items', 'label' => __( 'Questions', 'alify' ), 'name' => 'questions', 'type' => 'repeater', 'layout' => 'row', 'button_label' => __( 'Add Question', 'alify' ), 'sub_fields' => array(
+								array( 'key' => 'field_alify_faq_question', 'label' => __( 'Question', 'alify' ), 'name' => 'question', 'type' => 'text', 'required' => 1 ),
+								array( 'key' => 'field_alify_faq_answer', 'label' => __( 'Answer', 'alify' ), 'name' => 'answer', 'type' => 'wysiwyg', 'tabs' => 'visual', 'toolbar' => 'basic', 'media_upload' => 0 ),
+							), ),
+						),
+					),
+					'layout_alify_cta' => array(
+						'key' => 'layout_alify_cta', 'name' => 'call_to_action', 'label' => __( 'Call to Action', 'alify' ), 'display' => 'block',
+						'sub_fields' => array(
+							array( 'key' => 'field_alify_cta_heading', 'label' => __( 'Heading', 'alify' ), 'name' => 'heading', 'type' => 'text' ),
+							array( 'key' => 'field_alify_cta_copy', 'label' => __( 'Description', 'alify' ), 'name' => 'copy', 'type' => 'textarea', 'rows' => 3 ),
+							array( 'key' => 'field_alify_cta_button', 'label' => __( 'Button Label', 'alify' ), 'name' => 'button_label', 'type' => 'text' ),
+							array( 'key' => 'field_alify_cta_url', 'label' => __( 'Button URL', 'alify' ), 'name' => 'button_url', 'type' => 'url' ),
+						),
+					),
+				), 'button_label' => __( 'Add Content Section', 'alify' ) ),
+			),
+			'location' => array(
+				array( array( 'param' => 'post_type', 'operator' => '==', 'value' => 'page' ) ),
+				array( array( 'param' => 'post_type', 'operator' => '==', 'value' => 'post' ) ),
+				array( array( 'param' => 'post_type', 'operator' => '==', 'value' => 'service' ) ),
+				array( array( 'param' => 'post_type', 'operator' => '==', 'value' => 'work' ) ),
+				array( array( 'param' => 'post_type', 'operator' => '==', 'value' => 'case_study' ) ),
+				array( array( 'param' => 'post_type', 'operator' => '==', 'value' => 'industry' ) ),
+				array( array( 'param' => 'post_type', 'operator' => '==', 'value' => 'faq' ) ),
+				array( array( 'param' => 'post_type', 'operator' => '==', 'value' => 'pricing' ) ),
+				array( array( 'param' => 'post_type', 'operator' => '==', 'value' => 'testimonial' ) ),
+			),
+			'menu_order' => 0,
+			'position' => 'normal',
+			'active' => true,
+		)
+	);
+
+	acf_add_local_field_group(
+		array(
 			'key' => 'group_alify_form_definition',
 			'title' => __( 'Form Definition', 'alify' ),
 			'fields' => array(

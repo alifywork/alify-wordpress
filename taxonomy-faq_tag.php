@@ -1,2 +1,5 @@
 <?php
-/** Front-end tag archive placeholder for faq; presentation intentionally deferred. */
+/** Dynamic WordPress taxonomy archive. */
+get_header();
+get_template_part( 'template-parts/archive', 'loop' );
+get_footer();

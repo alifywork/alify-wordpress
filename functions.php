@@ -16,3 +16,4 @@ require_once ALIFY_THEME_DIR . '/inc/content-types.php';
 require_once ALIFY_THEME_DIR . '/inc/taxonomies.php';
 require_once ALIFY_THEME_DIR . '/inc/acf.php';
 require_once ALIFY_THEME_DIR . '/inc/forms.php';
+require_once ALIFY_THEME_DIR . '/inc/frontend.php';
