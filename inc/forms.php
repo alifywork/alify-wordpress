@@ -111,6 +111,46 @@ function alify_parse_form_options( $raw_options ) {
 	return $options;
 }
 
+/** Normalize administrator-defined fields and reject reserved/duplicate input names. */
+function alify_normalize_form_fields( $fields ) {
+	$allowed_types = array( 'text', 'email', 'tel', 'url', 'textarea', 'select', 'checkbox', 'radio' );
+	$reserved      = array( 'action', 'form_id', 'form_source', 'alify_nonce', '_alify_return_to', 'alify_company_website', 'privacyconsent', '_wpnonce', '_wp_http_referer' );
+	$used_names    = array();
+	$label_counts  = array();
+	$normalized    = array();
+	if ( ! is_array( $fields ) ) {
+		return $normalized;
+	}
+	foreach ( $fields as $field ) {
+		if ( ! is_array( $field ) || ! isset( $field['field_name'], $field['label'] ) || ! is_scalar( $field['field_name'] ) || ! is_scalar( $field['label'] ) ) {
+			continue;
+		}
+		$name  = sanitize_key( $field['field_name'] );
+		$type  = isset( $field['field_type'] ) && is_scalar( $field['field_type'] ) ? sanitize_key( $field['field_type'] ) : 'text';
+		$label = sanitize_text_field( $field['label'] );
+		if ( '' === $name || '' === $label || in_array( $name, $reserved, true ) || isset( $used_names[ $name ] ) || ! in_array( $type, $allowed_types, true ) ) {
+			continue;
+		}
+		$options = alify_parse_form_options( isset( $field['options'] ) && is_scalar( $field['options'] ) ? $field['options'] : '' );
+		if ( in_array( $type, array( 'select', 'checkbox', 'radio' ), true ) && empty( $options ) ) {
+			continue;
+		}
+		$used_names[ $name ] = true;
+		$label_counts[ $label ] = isset( $label_counts[ $label ] ) ? $label_counts[ $label ] + 1 : 1;
+		if ( $label_counts[ $label ] > 1 ) {
+			$label .= ' (' . $label_counts[ $label ] . ')';
+		}
+		$normalized[] = array(
+			'field_name' => $name,
+			'field_type' => $type,
+			'label'      => $label,
+			'required'   => ! empty( $field['required'] ),
+			'options'    => $options,
+		);
+	}
+	return $normalized;
+}
+
 /** Print a reusable ACF-configured form. Usage: [alify_form id="123"]. */
 function alify_form_shortcode( $attributes ) {
 	$attributes = shortcode_atts( array( 'id' => 0, 'submit_label' => __( 'Send message', 'alify' ) ), $attributes, 'alify_form' );
@@ -119,12 +159,17 @@ function alify_form_shortcode( $attributes ) {
 	if ( ! $form || 'alify_form' !== $form->post_type || 'publish' !== $form->post_status ) {
 		return current_user_can( 'edit_posts' ) ? '<p class="alify-form-error">' . esc_html__( 'Choose a published Alify Form to display.', 'alify' ) . '</p>' : '';
 	}
-	$fields = alify_get_form_fields( $form_id );
+	$raw_fields = alify_get_form_fields( $form_id );
+	$fields     = alify_normalize_form_fields( $raw_fields );
 	if ( empty( $fields ) ) {
 		return current_user_can( 'edit_posts' ) ? '<p class="alify-form-error">' . esc_html__( 'Add fields to this form or choose a Form Template.', 'alify' ) . '</p>' : '';
 	}
 
 	ob_start();
+	$form_instance = function_exists( 'wp_unique_id' ) ? wp_unique_id( 'alify-form-' . $form_id . '-' ) : 'alify-form-' . $form_id . '-' . wp_rand( 1000, 999999 );
+	if ( current_user_can( 'edit_posts' ) && is_array( $raw_fields ) && count( $fields ) < count( $raw_fields ) ) {
+		echo '<p class="alify-form-error">' . esc_html__( 'Some configured fields were skipped because their names are reserved, duplicated, or incomplete. Review the field definitions in ACF.', 'alify' ) . '</p>';
+	}
 	$status_key = 'form-' . $form_id;
 	if ( isset( $_GET['form_status'], $_GET['form_key'] ) && $status_key === sanitize_key( wp_unslash( $_GET['form_key'] ) ) ) {
 		$status  = sanitize_key( wp_unslash( $_GET['form_status'] ) );
@@ -143,33 +188,32 @@ function alify_form_shortcode( $attributes ) {
 		<input type="hidden" name="form_id" value="<?php echo esc_attr( $form_id ); ?>">
 		<input type="hidden" name="alify_nonce" value="<?php echo esc_attr( wp_create_nonce( 'alify_public_form' ) ); ?>">
 		<input type="hidden" name="_alify_return_to" value="<?php echo esc_url( get_permalink() ); ?>">
-		<?php foreach ( $fields as $index => $field ) :
-			$name     = sanitize_key( $field['field_name'] ?? '' );
-			$label    = sanitize_text_field( $field['label'] ?? '' );
-			$type     = sanitize_key( $field['field_type'] ?? 'text' );
-			$required = ! empty( $field['required'] );
-			$options  = alify_parse_form_options( $field['options'] ?? '' );
-			if ( '' === $name || '' === $label || ! in_array( $type, array( 'text', 'email', 'tel', 'url', 'textarea', 'select', 'checkbox', 'radio' ), true ) ) {
-				continue;
-			}
-			$id = 'alify-form-' . $form_id . '-' . $name;
+		<?php foreach ( $fields as $field ) :
+			$name     = $field['field_name'];
+			$label    = $field['label'];
+			$type     = $field['field_type'];
+			$required = $field['required'];
+			$options  = $field['options'];
+			$id       = $form_instance . $name;
 			?>
 			<div class="form-field">
-				<label for="<?php echo esc_attr( $id ); ?>"><?php echo esc_html( $label ); ?><?php echo $required ? ' <span aria-hidden="true">*</span>' : ''; ?></label>
-				<?php if ( 'textarea' === $type ) : ?>
-					<textarea id="<?php echo esc_attr( $id ); ?>" name="<?php echo esc_attr( $name ); ?>" <?php echo $required ? 'required' : ''; ?>></textarea>
-				<?php elseif ( 'select' === $type ) : ?>
-					<select id="<?php echo esc_attr( $id ); ?>" name="<?php echo esc_attr( $name ); ?>" <?php echo $required ? 'required' : ''; ?>><option value=""><?php esc_html_e( 'Please select', 'alify' ); ?></option><?php foreach ( $options as $value => $option_label ) : ?><option value="<?php echo esc_attr( $value ); ?>"><?php echo esc_html( $option_label ); ?></option><?php endforeach; ?></select>
-				<?php elseif ( in_array( $type, array( 'checkbox', 'radio' ), true ) ) : ?>
-					<fieldset class="alify-form-options"><legend class="screen-reader-text"><?php echo esc_html( $label ); ?></legend><?php foreach ( $options as $value => $option_label ) : $option_id = $id . '-' . sanitize_html_class( $value ); ?><label for="<?php echo esc_attr( $option_id ); ?>"><input id="<?php echo esc_attr( $option_id ); ?>" type="<?php echo esc_attr( $type ); ?>" name="<?php echo esc_attr( $name . ( 'checkbox' === $type ? '[]' : '' ) ); ?>" value="<?php echo esc_attr( $value ); ?>" <?php echo $required ? 'required' : ''; ?>> <?php echo esc_html( $option_label ); ?></label><?php endforeach; ?></fieldset>
+				<?php if ( in_array( $type, array( 'checkbox', 'radio' ), true ) ) : ?>
+					<fieldset class="alify-form-options"><legend><?php echo esc_html( $label ); ?><?php echo $required ? ' <span aria-hidden="true">*</span>' : ''; ?></legend><?php $option_index = 0; foreach ( $options as $value => $option_label ) : $option_id = $id . '-option-' . $option_index; ++$option_index; ?><label for="<?php echo esc_attr( $option_id ); ?>"><input id="<?php echo esc_attr( $option_id ); ?>" type="<?php echo esc_attr( $type ); ?>" name="<?php echo esc_attr( $name . ( 'checkbox' === $type ? '[]' : '' ) ); ?>" value="<?php echo esc_attr( $value ); ?>" <?php echo $required ? 'required' : ''; ?>> <?php echo esc_html( $option_label ); ?></label><?php endforeach; ?></fieldset>
 				<?php else : ?>
-					<input id="<?php echo esc_attr( $id ); ?>" type="<?php echo esc_attr( $type ); ?>" name="<?php echo esc_attr( $name ); ?>" <?php echo $required ? 'required' : ''; ?>>
+					<label for="<?php echo esc_attr( $id ); ?>"><?php echo esc_html( $label ); ?><?php echo $required ? ' <span aria-hidden="true">*</span>' : ''; ?></label>
+					<?php if ( 'textarea' === $type ) : ?>
+						<textarea id="<?php echo esc_attr( $id ); ?>" name="<?php echo esc_attr( $name ); ?>" <?php echo $required ? 'required' : ''; ?>></textarea>
+					<?php elseif ( 'select' === $type ) : ?>
+						<select id="<?php echo esc_attr( $id ); ?>" name="<?php echo esc_attr( $name ); ?>" <?php echo $required ? 'required' : ''; ?>><option value=""><?php esc_html_e( 'Please select', 'alify' ); ?></option><?php foreach ( $options as $value => $option_label ) : ?><option value="<?php echo esc_attr( $value ); ?>"><?php echo esc_html( $option_label ); ?></option><?php endforeach; ?></select>
+					<?php else : ?>
+						<input id="<?php echo esc_attr( $id ); ?>" type="<?php echo esc_attr( $type ); ?>" name="<?php echo esc_attr( $name ); ?>" <?php echo $required ? 'required' : ''; ?>>
+					<?php endif; ?>
 				<?php endif; ?>
 			</div>
 		<?php endforeach; ?>
 		<?php $privacy_page = function_exists( 'get_field' ) ? absint( get_field( 'forms_privacy_page', 'option' ) ) : 0; ?>
 		<div class="form-field alify-form-consent"><label><input type="checkbox" name="privacyConsent" value="Accepted" required> <?php esc_html_e( 'I agree to the use of my information to respond to this inquiry.', 'alify' ); ?><?php if ( $privacy_page ) : ?> <a href="<?php echo esc_url( get_permalink( $privacy_page ) ); ?>"><?php esc_html_e( 'Read our Privacy Policy.', 'alify' ); ?></a><?php endif; ?></label></div>
-		<div class="alify-honeypot" aria-hidden="true"><label for="alify-company-website-<?php echo esc_attr( $form_id ); ?>"><?php esc_html_e( 'Leave this field empty', 'alify' ); ?><input id="alify-company-website-<?php echo esc_attr( $form_id ); ?>" name="alify_company_website" type="text" tabindex="-1" autocomplete="off"></label></div>
+		<div class="alify-honeypot" aria-hidden="true"><label for="alify-company-website-<?php echo esc_attr( $form_instance ); ?>"><?php esc_html_e( 'Leave this field empty', 'alify' ); ?><input id="alify-company-website-<?php echo esc_attr( $form_instance ); ?>" name="alify_company_website" type="text" tabindex="-1" autocomplete="off"></label></div>
 		<button class="button button--primary" type="submit"><?php echo esc_html( $attributes['submit_label'] ); ?> <i class="fa-solid fa-arrow-right icon-arrow-up-right" aria-hidden="true"></i></button>
 	</form>
 	<?php
@@ -211,7 +255,7 @@ function alify_prepare_source_inquiry( $markup, $source ) {
 
 /** Validate field data from a configured reusable form. */
 function alify_validate_configured_form( $form_id, $raw_data ) {
-	$definitions = alify_get_form_fields( $form_id );
+	$definitions = alify_normalize_form_fields( alify_get_form_fields( $form_id ) );
 	if ( empty( $definitions ) ) {
 		return new WP_Error( 'missing_fields', __( 'This form is not configured.', 'alify' ) );
 	}
@@ -225,7 +269,7 @@ function alify_validate_configured_form( $form_id, $raw_data ) {
 		$label    = sanitize_text_field( $field['label'] ?? $name );
 		$required = ! empty( $field['required'] );
 		$value    = isset( $raw_data[ $name ] ) ? $raw_data[ $name ] : '';
-		$options  = alify_parse_form_options( $field['options'] ?? '' );
+		$options  = $field['options'];
 		if ( is_array( $value ) ) {
 			if ( 'checkbox' !== $type ) {
 				return new WP_Error( 'invalid_value', sprintf( __( 'Invalid value for %s.', 'alify' ), $label ) );
@@ -277,7 +321,11 @@ function alify_validate_configured_form( $form_id, $raw_data ) {
 	if ( 'Accepted' !== $consent ) {
 		return new WP_Error( 'privacy', __( 'Please accept the privacy notice before submitting.', 'alify' ) );
 	}
-	$clean[ __( 'Privacy consent', 'alify' ) ] = __( 'Accepted', 'alify' );
+	$consent_label = __( 'Privacy consent', 'alify' );
+	while ( isset( $clean[ $consent_label ] ) ) {
+		$consent_label .= ' (consent)';
+	}
+	$clean[ $consent_label ] = __( 'Accepted', 'alify' );
 	return $clean;
 }
 
@@ -322,7 +370,11 @@ function alify_validate_source_inquiry( $source, $raw_data ) {
 	if ( 'Accepted' !== $consent ) {
 		return new WP_Error( 'privacy', __( 'Please accept the privacy notice before submitting.', 'alify' ) );
 	}
-	$clean[ __( 'Privacy consent', 'alify' ) ] = __( 'Accepted', 'alify' );
+	$consent_label = __( 'Privacy consent', 'alify' );
+	while ( isset( $clean[ $consent_label ] ) ) {
+		$consent_label .= ' (consent)';
+	}
+	$clean[ $consent_label ] = __( 'Accepted', 'alify' );
 	return $clean;
 }
 
@@ -378,7 +430,15 @@ function alify_handle_public_form_submission() {
 	}
 	set_transient( $rate_key, $count + 1, 15 * MINUTE_IN_SECONDS );
 
-	$name = isset( $clean_data['Name'] ) ? sanitize_text_field( is_array( $clean_data['Name'] ) ? '' : $clean_data['Name'] ) : __( 'Website visitor', 'alify' );
+	$name = isset( $clean_data['Name'] ) && ! is_array( $clean_data['Name'] ) ? sanitize_text_field( $clean_data['Name'] ) : __( 'Website visitor', 'alify' );
+	if ( $form_post ) {
+		foreach ( alify_normalize_form_fields( alify_get_form_fields( $form_id ) ) as $configured_field ) {
+			if ( 'name' === $configured_field['field_name'] && isset( $clean_data[ $configured_field['label'] ] ) && ! is_array( $clean_data[ $configured_field['label'] ] ) ) {
+				$name = sanitize_text_field( $clean_data[ $configured_field['label'] ] );
+				break;
+			}
+		}
+	}
 	$title = sprintf( __( '%1$s inquiry — %2$s — %3$s', 'alify' ), $form_post ? get_the_title( $form_post ) : ( 'contact' === $source ? __( 'Contact', 'alify' ) : __( 'Project', 'alify' ) ), $name, current_time( 'mysql' ) );
 	$entry_id = wp_insert_post(
 		array(
@@ -407,6 +467,14 @@ function alify_handle_public_form_submission() {
 		$recipient = get_option( 'admin_email' );
 	}
 	$reply_email = isset( $clean_data['Email'] ) && ! is_array( $clean_data['Email'] ) ? sanitize_email( $clean_data['Email'] ) : '';
+	if ( $form_post ) {
+		foreach ( alify_normalize_form_fields( alify_get_form_fields( $form_id ) ) as $configured_field ) {
+			if ( 'email' === $configured_field['field_name'] && isset( $clean_data[ $configured_field['label'] ] ) && ! is_array( $clean_data[ $configured_field['label'] ] ) ) {
+				$reply_email = sanitize_email( $clean_data[ $configured_field['label'] ] );
+				break;
+			}
+		}
+	}
 	$subject     = sprintf( __( 'New website inquiry: %s', 'alify' ), $name );
 	$body        = array( __( 'A new website form was submitted.', 'alify' ), '' );
 	foreach ( $clean_data as $label => $value ) {

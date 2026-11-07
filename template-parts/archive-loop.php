@@ -1,12 +1,29 @@
 <?php
 /** Dynamic WordPress archive grid used once the corresponding content exists. */
-$term_object = get_queried_object();
-if ( is_tax() || is_category() || is_tag() ) {
+$term_object        = get_queried_object();
+$search_post_types = array();
+if ( is_search() || is_post_type_archive() ) {
+	$query_types       = get_query_var( 'post_type' );
+	$search_post_types = is_array( $query_types ) ? $query_types : array( $query_types );
+} elseif ( is_tax() && $term_object instanceof WP_Term ) {
+	$taxonomy_object = get_taxonomy( $term_object->taxonomy );
+	if ( $taxonomy_object ) {
+		$search_post_types = $taxonomy_object->object_type;
+	}
+} elseif ( is_category() || is_tag() || is_home() ) {
+	$search_post_types = array( 'post' );
+}
+$search_post_types = array_values( array_filter( array_unique( array_map( 'sanitize_key', $search_post_types ) ), 'post_type_exists' ) );
+if ( is_search() ) {
+	$search_term = get_search_query( false );
+	$heading     = $search_term ? sprintf( __( 'Search results for “%s”', 'alify' ), $search_term ) : __( 'Search results', 'alify' );
+	$copy        = '';
+	$eyebrow     = __( 'Search', 'alify' );
+} elseif ( is_tax() || is_category() || is_tag() ) {
 	$heading = single_term_title( '', false );
 	$copy    = term_description();
 	$eyebrow = __( 'Explore', 'alify' );
 } elseif ( is_post_type_archive() ) {
-	$object  = get_queried_object();
 	$heading = post_type_archive_title( '', false );
 	$copy    = function_exists( 'get_field' ) ? (string) get_field( 'archive_description', 'option' ) : '';
 	$eyebrow = __( 'What we do', 'alify' );
@@ -20,6 +37,10 @@ if ( is_tax() || is_category() || is_tag() ) {
 <main class="inner-page" id="main-content">
 	<section class="page-section alify-dynamic-archive"><div class="container"><div class="row"><div class="col-12">
 		<?php if ( $copy ) : ?><div class="alify-archive-intro"><?php echo wp_kses_post( $copy ); ?></div><?php endif; ?>
+		<form class="alify-archive-search" role="search" method="get" action="<?php echo esc_url( home_url( '/' ) ); ?>">
+			<label for="alify-archive-search-input"><?php esc_html_e( 'Search this site', 'alify' ); ?></label>
+			<div><input id="alify-archive-search-input" type="search" name="s" value="<?php echo esc_attr( get_search_query( false ) ); ?>" placeholder="<?php esc_attr_e( 'Search…', 'alify' ); ?>"><?php foreach ( $search_post_types as $search_post_type ) : ?><input type="hidden" name="post_type[]" value="<?php echo esc_attr( $search_post_type ); ?>"><?php endforeach; ?><button type="submit"><?php esc_html_e( 'Search', 'alify' ); ?></button></div>
+		</form>
 		<?php if ( have_posts() ) : ?>
 			<div class="alify-archive-grid">
 			<?php while ( have_posts() ) : the_post(); ?>
@@ -38,7 +59,7 @@ if ( is_tax() || is_category() || is_tag() ) {
 			</div>
 			<div class="alify-archive-pagination"><?php the_posts_pagination( array( 'mid_size' => 1, 'prev_text' => __( 'Previous', 'alify' ), 'next_text' => __( 'Next', 'alify' ) ) ); ?></div>
 		<?php else : ?>
-			<p><?php esc_html_e( 'No content has been published here yet.', 'alify' ); ?></p>
+			<p><?php echo esc_html( is_search() ? __( 'No results matched your search. Try another term.', 'alify' ) : __( 'No content has been published here yet.', 'alify' ) ); ?></p>
 		<?php endif; ?>
 	</div></div></div></section>
 </main>

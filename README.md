@@ -7,7 +7,7 @@ A custom WordPress theme with the supplied Alify front-end converted into PHP te
 - Public CPTs: Services, Work, Case Studies, Industries, FAQs, Pricing, and Testimonials.
 - Each CPT has its own hierarchical category taxonomy and non-hierarchical tag taxonomy.
 - Blog uses WordPress core Posts, Categories, Tags, and single-post templates.
-- Primary and Footer navigation locations are registered and connected to the converted header/footer.
+- Primary and Footer navigation locations are registered and connected to the converted header/footer. The WordPress Primary Menu merges with the supplied desktop/mobile mega menus instead of removing them.
 - Forms, Form Templates, and private Form Entries are admin-managed post types.
 
 ## Front-end conversion
@@ -16,7 +16,7 @@ A custom WordPress theme with the supplied Alify front-end converted into PHP te
 - The original complete source snapshot from `alifywork/alify-web`, branch `arena/08a66435-alify-web`, remains under `frontend-source/` for reference.
 - Bootstrap grid, Font Awesome, GSAP/ScrollTrigger, source CSS/JavaScript, fonts, and images are loaded locally; there is no CDN dependency.
 - Static `.html` links and relative asset paths are mapped to WordPress permalinks and theme asset URLs.
-- Populated CPT/blog archives use live WordPress loops. Empty CPT/blog archives fall back to the source archive design.
+- Populated CPT/blog archives use live WordPress loops. Empty CPT/blog archives fall back to the source archive design. Search results use a searchable archive grid that preserves the relevant post types; 404 pages offer search, services, and home links.
 - Matching source slugs use their supplied design by default. WordPress editor content or ACF Page Sections can replace the static body; ACF hero fields can override the imported hero.
 
 ## ACF Pro
@@ -29,7 +29,7 @@ ACF Pro is optional for activation. When active it adds Theme Settings and field
 2. Go to **Appearance → Alify Setup** and click **Create / Repair Starter Pages & Content**. This creates the Pages, Services, Work, Case Studies, Industries, and Blog posts required by the source links, along with the source hero and main body as editable WordPress content, plus source-derived excerpts and local image references. It is safe to rerun and preserves matching records, existing body content, and editor-authored excerpts.
 3. Set the homepage and Posts page under **Settings → Reading** if they are not already selected.
 4. Assign Primary and Footer menus under **Appearance → Menus**. Without assigned menus, the supplied navigation remains as a fallback.
-5. Save **Settings → Permalinks** once after activation to refresh rewrite rules.
+5. Rewrite rules are flushed once on theme activation. If URLs return 404 later, save **Settings → Permalinks** to refresh them again.
 
 The importer extracts each source page hero and main body into the WordPress editor once, while preserving the converted PHP view as the default presentation. In the Alify Page Presentation box, choose **WordPress editor content** to publish your edited body, or leave **Original Alify design** selected. Rerunning setup never overwrites a non-empty body or excerpt. ACF Page Sections remain available as a structured alternative, and dynamic archive cards display editable excerpts.
 
@@ -38,5 +38,6 @@ The importer extracts each source page hero and main body into the WordPress edi
 - The supplied Contact and Start Project pages post securely to WordPress. They retain the on-page review step, then validate and save submissions as private Form Entries.
 - Submissions include a nonce, required-field/email/URL validation, privacy consent, honeypot, and basic per-IP rate limiting. Notifications use `wp_mail()` and the configured Forms notification email (or WordPress admin email).
 - Create reusable forms under **Forms**, configure fields in ACF Pro, then place `[alify_form id="123"]` in page content or an ACF text section. A Form Template can provide its field list.
-- View submissions under **Form Entries**. Administrators can export them as CSV from **Form Entries → Export CSV**. The export contains personal information; handle it securely.
+- View submissions under **Form Entries**; entry access and CSV export are restricted to users with the site administrator capability. Export from **Form Entries → Export CSV**. The export contains personal information; handle it securely.
 - Email delivery depends on the WordPress host's mail configuration; configure SMTP in production. Submissions are still stored as entries if mail delivery fails.
+- If full-page caching is enabled, exclude pages containing forms so cached nonce fields do not expire. Form entries are retained until an administrator deletes them; apply your own retention schedule and secure any CSV exports.

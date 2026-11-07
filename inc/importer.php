@@ -80,22 +80,21 @@ function alify_get_source_excerpt( $slug ) {
 }
 
 function alify_import_source_image( $post_id, $slug ) {
-	if ( get_post_meta( $post_id, '_alify_source_image', true ) ) {
+	if ( get_post_meta( $post_id, '_alify_source_image_checked', true ) ) {
 		return;
 	}
 	$file = alify_get_source_page_file( $slug );
-	if ( ! is_readable( $file ) ) {
-		return;
+	if ( is_readable( $file ) ) {
+		$markup = file_get_contents( $file );
+		if ( preg_match( '~<img[^>]+src="(assets/images/[^"]+)"~i', $markup, $match ) ) {
+			$relative = sanitize_text_field( $match[1] );
+			$asset    = ALIFY_THEME_DIR . '/frontend-source/' . $relative;
+			if ( is_file( $asset ) && ! get_post_meta( $post_id, '_alify_source_image', true ) ) {
+				update_post_meta( $post_id, '_alify_source_image', $relative );
+			}
+		}
 	}
-	$markup = file_get_contents( $file );
-	if ( ! preg_match( '~<img[^>]+src="(assets/images/[^"]+)"~i', $markup, $match ) ) {
-		return;
-	}
-	$relative = sanitize_text_field( $match[1] );
-	$asset    = ALIFY_THEME_DIR . '/frontend-source/' . $relative;
-	if ( is_file( $asset ) ) {
-		update_post_meta( $post_id, '_alify_source_image', $relative );
-	}
+	update_post_meta( $post_id, '_alify_source_image_checked', '1' );
 }
 
 function alify_import_starter_content() {

@@ -6,7 +6,7 @@ window.alifyFixThemeMarkup = function (root) {
   const assetsBase = String(config.assetsBase || "").replace(/\/$/, "");
   const homeUrl = String(config.homeUrl || "/").replace(/\/$/, "");
 
-  const insertMenu = (selector, markup, className) => {
+  const insertMenu = (selector, markup, className, specialItems) => {
     if (!markup) return;
     const existing = root.querySelector(selector);
     if (!existing) return;
@@ -16,10 +16,45 @@ window.alifyFixThemeMarkup = function (root) {
     if (!menu) return;
     menu.className = className;
     menu.querySelectorAll("a").forEach((link) => link.classList.add("header__nav-link"));
+
+    // Keep the theme's accessible mega menus while allowing WordPress to control
+    // top-level navigation labels and destinations.
+    (specialItems || []).forEach((special) => {
+      const original = [...existing.querySelectorAll(special.selector)].find((item) => Boolean(item.querySelector('.header__mobile-resources-toggle')) === Boolean(special.isResources));
+      if (!original) return;
+      const wpItem = [...menu.children].find((item) => {
+        const link = item.querySelector(":scope > a");
+        if (!link) return false;
+        const label = link.textContent.trim().toLowerCase();
+        const url = link.getAttribute("href") || "";
+        return special.matches(label, url);
+      });
+      const sourceLink = original.querySelector(special.linkSelector);
+      if (wpItem) {
+        const wpLink = wpItem.querySelector(":scope > a");
+        if (sourceLink && wpLink) {
+          sourceLink.href = wpLink.href;
+          sourceLink.textContent = wpLink.textContent.trim();
+          if (special.relatedLinkSelector) {
+            const relatedLink = original.querySelector(special.relatedLinkSelector);
+            if (relatedLink) relatedLink.href = wpLink.href;
+          }
+        }
+        wpItem.replaceWith(original);
+      } else {
+        menu.append(original);
+      }
+    });
     existing.replaceWith(menu);
   };
-  insertMenu(".header__nav-list", config.primaryMenuHtml, "header__nav-list");
-  insertMenu(".header__mobile-list", config.primaryMenuHtml, "header__mobile-list");
+  insertMenu(".header__nav-list", config.primaryMenuHtml, "header__nav-list", [
+    { selector: ".header__mega-item:not(.header__resources-item)", linkSelector: ".header__mega-trigger > a", relatedLinkSelector: ".mega-menu__header > a", isResources: false, matches: (label, url) => /service/i.test(label) || /\/services(?:[/?#]|$)/i.test(url) },
+    { selector: ".header__resources-item", linkSelector: ".header__mega-trigger > a", isResources: false, matches: (label) => /^(explore|resources)$/i.test(label) },
+  ]);
+  insertMenu(".header__mobile-list", config.primaryMenuHtml, "header__mobile-list", [
+    { selector: ".header__mobile-mega", linkSelector: ".header__mobile-mega-trigger > a", isResources: false, matches: (label, url) => /service/i.test(label) || /\/services(?:[/?#]|$)/i.test(url) },
+    { selector: ".header__mobile-mega", linkSelector: ".header__mobile-mega-trigger > a", isResources: true, matches: (label) => /^(explore|resources)$/i.test(label) },
+  ]);
 
   if (config.footerMenuHtml) {
     const footerList = root.querySelector('.footer__column[aria-label="Footer navigation"] ul');

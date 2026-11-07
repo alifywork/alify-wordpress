@@ -3,13 +3,19 @@
 
 defined( 'ABSPATH' ) || exit;
 
-function alify_add_content_mode_metaboxes() {
-	$post_types = array_merge( array( 'page', 'post' ), array( 'service', 'work', 'case_study', 'industry', 'faq', 'pricing', 'testimonial' ) );
-	foreach ( $post_types as $post_type ) {
-		add_meta_box( 'alify_content_mode', __( 'Alify Page Presentation', 'alify' ), 'alify_render_content_mode_metabox', $post_type, 'side', 'default' );
+function alify_add_content_mode_metaboxes( $post_type, $post ) {
+	if ( ! $post instanceof WP_Post ) {
+		return;
 	}
+	$source_slug = 'home' === $post->post_name ? 'index' : sanitize_file_name( $post->post_name );
+	$source_file = ALIFY_THEME_DIR . '/template-parts/source-pages/' . $source_slug . '.php';
+	$has_source  = is_readable( $source_file ) || get_post_meta( $post->ID, '_alify_source_content_imported', true );
+	if ( ! $has_source ) {
+		return;
+	}
+	add_meta_box( 'alify_content_mode', __( 'Alify Page Presentation', 'alify' ), 'alify_render_content_mode_metabox', $post_type, 'side', 'default' );
 }
-add_action( 'add_meta_boxes', 'alify_add_content_mode_metaboxes' );
+add_action( 'add_meta_boxes', 'alify_add_content_mode_metaboxes', 10, 2 );
 
 function alify_render_content_mode_metabox( $post ) {
 	$mode = get_post_meta( $post->ID, '_alify_content_mode', true );

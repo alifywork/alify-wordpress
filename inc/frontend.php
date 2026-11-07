@@ -330,6 +330,11 @@ function alify_render_source_view( $slug ) {
 	if ( ! is_readable( $file ) ) {
 		return false;
 	}
+	// Source templates may be called before the main query loop; initialize post
+	// context so ACF fields, shortcodes, and template tags resolve the right record.
+	if ( is_singular() && ! in_the_loop() && have_posts() ) {
+		the_post();
+	}
 
 	if ( is_singular() ) {
 		$post_id = get_queried_object_id();

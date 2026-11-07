@@ -26,3 +26,9 @@ function alify_enable_page_excerpts() {
 	add_post_type_support( 'page', 'excerpt' );
 }
 add_action( 'init', 'alify_enable_page_excerpts' );
+
+/** Refresh registered CPT/taxonomy routes once when the theme is activated. */
+function alify_flush_rewrite_rules_on_switch() {
+	flush_rewrite_rules();
+}
+add_action( 'after_switch_theme', 'alify_flush_rewrite_rules_on_switch' );

@@ -18,7 +18,7 @@ class PageHero extends HTMLElement {
     const variantClass = variant ? ` page-hero--${variant}` : "";
 
     this.innerHTML = `
-      <main class="page-hero${variantClass}" id="home">
+      <section class="page-hero${variantClass}" id="home">
         <div class="page-hero__media" aria-hidden="true">
           <img src="${(window.AlifyTheme && window.AlifyTheme.assetsBase) || ""}/images/background/${background}" alt="" width="1920" height="1080" fetchpriority="high">
         </div>
@@ -35,7 +35,7 @@ class PageHero extends HTMLElement {
             </div>
           </div>
         </section>
-      </main>
+      </section>
     `;
 
     this.animateHero();
