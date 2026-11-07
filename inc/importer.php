@@ -97,10 +97,128 @@ function alify_import_source_image( $post_id, $slug ) {
 	update_post_meta( $post_id, '_alify_source_image_checked', '1' );
 }
 
+/** Copy supported source image assets into uploads once and return their source-path map. */
+function alify_import_source_media_assets() {
+	$media_map = get_option( 'alify_source_media_assets', array() );
+	$media_map = is_array( $media_map ) ? $media_map : array();
+	$errors    = array();
+	$imported  = 0;
+	$image_dir = wp_normalize_path( ALIFY_THEME_DIR . '/frontend-source/assets/images' );
+	$files     = glob( $image_dir . '/*/*' );
+	if ( ! is_array( $files ) ) {
+		return array( 'map' => $media_map, 'imported' => 0, 'errors' => array() );
+	}
+
+	foreach ( $files as $file ) {
+		if ( ! is_file( $file ) ) {
+			continue;
+		}
+		$extension = strtolower( pathinfo( $file, PATHINFO_EXTENSION ) );
+		if ( ! in_array( $extension, array( 'jpg', 'jpeg', 'png', 'webp' ), true ) ) {
+			continue;
+		}
+		$relative = 'assets/images/' . ltrim( str_replace( $image_dir, '', wp_normalize_path( $file ) ), '/' );
+		$existing_id = isset( $media_map[ $relative ] ) ? absint( $media_map[ $relative ] ) : 0;
+		if ( $existing_id && 'attachment' === get_post_type( $existing_id ) ) {
+			continue;
+		}
+		$existing = get_posts(
+			array(
+				'post_type'      => 'attachment',
+				'post_status'    => 'inherit',
+				'meta_key'       => '_alify_source_asset_path',
+				'meta_value'     => $relative,
+				'posts_per_page' => 1,
+				'fields'         => 'ids',
+				'no_found_rows'  => true,
+			)
+		);
+		if ( $existing ) {
+			$media_map[ $relative ] = absint( $existing[0] );
+			continue;
+		}
+
+		$filetype = wp_check_filetype( basename( $file ) );
+		if ( empty( $filetype['type'] ) || 0 !== strpos( $filetype['type'], 'image/' ) ) {
+			$errors[] = sprintf( __( '%s was skipped because WordPress does not allow its image type.', 'alify' ), $relative );
+			continue;
+		}
+		$contents = file_get_contents( $file );
+		if ( false === $contents ) {
+			$errors[] = sprintf( __( '%s could not be read from the theme assets.', 'alify' ), $relative );
+			continue;
+		}
+		$upload = wp_upload_bits( basename( $file ), null, $contents );
+		if ( ! empty( $upload['error'] ) ) {
+			$errors[] = sprintf( '%1$s: %2$s', $relative, sanitize_text_field( $upload['error'] ) );
+			continue;
+		}
+
+		$title = sanitize_text_field( ucwords( str_replace( array( '-', '_' ), ' ', pathinfo( basename( $file ), PATHINFO_FILENAME ) ) ) );
+		$attachment_id = wp_insert_attachment(
+			array(
+				'post_mime_type' => $upload['type'],
+				'post_title'     => $title,
+				'post_content'   => '',
+				'post_status'    => 'inherit',
+			),
+			$upload['file'],
+			0,
+			true
+		);
+		if ( is_wp_error( $attachment_id ) ) {
+			@unlink( $upload['file'] ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged -- remove the failed upload to avoid orphaned files.
+			$errors[] = sprintf( '%1$s: %2$s', $relative, $attachment_id->get_error_message() );
+			continue;
+		}
+
+		require_once ABSPATH . 'wp-admin/includes/image.php';
+		$metadata = wp_generate_attachment_metadata( $attachment_id, $upload['file'] );
+		if ( is_array( $metadata ) ) {
+			wp_update_attachment_metadata( $attachment_id, $metadata );
+		}
+		update_post_meta( $attachment_id, '_alify_source_asset_path', $relative );
+		if ( false !== strpos( $relative, 'assets/images/logo/' ) ) {
+			update_post_meta( $attachment_id, '_wp_attachment_image_alt', __( 'Alify logo', 'alify' ) );
+		} elseif ( false !== strpos( $relative, 'assets/images/industries/' ) ) {
+			update_post_meta( $attachment_id, '_wp_attachment_image_alt', $title . ' industry image' );
+		}
+		$media_map[ $relative ] = absint( $attachment_id );
+		++$imported;
+	}
+	update_option( 'alify_source_media_assets', $media_map, false );
+	return array( 'map' => $media_map, 'imported' => $imported, 'errors' => $errors );
+}
+
+/** Select the first supported raster source image for a record's editable thumbnail. */
+function alify_get_source_thumbnail_id( $slug, $media_map ) {
+	$file = alify_get_source_page_file( $slug );
+	if ( ! is_readable( $file ) || ! is_array( $media_map ) ) {
+		return 0;
+	}
+	$markup = file_get_contents( $file );
+	if ( ! preg_match_all( '~<img[^>]+src="(assets/images/[^"]+)"~i', $markup, $matches ) ) {
+		return 0;
+	}
+	foreach ( $matches[1] as $relative ) {
+		$relative = sanitize_text_field( $relative );
+		if ( false !== strpos( $relative, 'assets/images/background/' ) || ! isset( $media_map[ $relative ] ) ) {
+			continue;
+		}
+		$attachment_id = absint( $media_map[ $relative ] );
+		if ( $attachment_id && 'attachment' === get_post_type( $attachment_id ) ) {
+			return $attachment_id;
+		}
+	}
+	return 0;
+}
+
 function alify_import_starter_content() {
-	$created = 0;
-	$skipped = 0;
-	$errors  = array();
+	$media_result = alify_import_source_media_assets();
+	$media_map    = $media_result['map'];
+	$created      = 0;
+	$skipped      = 0;
+	$errors       = $media_result['errors'];
 	foreach ( alify_starter_content_manifest() as $slug => $details ) {
 		list( $post_type, $title ) = $details;
 		$excerpt        = alify_get_source_excerpt( $slug );
@@ -181,6 +299,12 @@ function alify_import_starter_content() {
 		}
 
 		alify_import_source_image( $id, $slug );
+		if ( ! get_post_thumbnail_id( $id ) ) {
+			$thumbnail_id = alify_get_source_thumbnail_id( $slug, $media_map );
+			if ( $thumbnail_id ) {
+				set_post_thumbnail( $id, $thumbnail_id );
+			}
+		}
 
 		if ( 'home' === $slug && 'publish' === get_post_status( $id ) && ! absint( get_option( 'page_on_front' ) ) ) {
 			update_option( 'show_on_front', 'page' );
@@ -190,7 +314,12 @@ function alify_import_starter_content() {
 			update_option( 'page_for_posts', $id );
 		}
 	}
-	return array( 'created' => $created, 'skipped' => $skipped, 'errors' => $errors );
+	return array(
+		'created'        => $created,
+		'skipped'        => $skipped,
+		'media_imported' => $media_result['imported'],
+		'errors'         => $errors,
+	);
 }
 
 function alify_content_setup_page() {
@@ -210,7 +339,7 @@ function alify_content_setup_page() {
 		<h1><?php esc_html_e( 'Alify Theme Setup', 'alify' ); ?></h1>
 		<p><?php esc_html_e( 'Create the starter Pages and published CPT/Blog records that connect the converted PHP designs and navigation. Existing matching slugs are preserved; this can safely be run more than once.', 'alify' ); ?></p>
 		<?php if ( is_array( $result ) ) : ?>
-			<div class="notice notice-success"><p><?php echo esc_html( sprintf( __( 'Setup complete: %1$d records created, %2$d already existed.', 'alify' ), $result['created'], $result['skipped'] ) ); ?></p></div>
+			<div class="notice notice-success"><p><?php echo esc_html( sprintf( __( 'Setup complete: %1$d records created, %2$d already existed, and %3$d source image assets were added to the Media Library.', 'alify' ), $result['created'], $result['skipped'], $result['media_imported'] ) ); ?></p></div>
 			<?php if ( ! empty( $result['errors'] ) ) : ?><div class="notice notice-error"><p><?php echo esc_html( implode( ' | ', $result['errors'] ) ); ?></p></div><?php endif; ?>
 		<?php endif; ?>
 		<p><?php esc_html_e( 'This adds starter titles, slugs, editable source page markup, excerpts, and image references. Existing body content and editor-authored excerpts are preserved when rerun. New records display the original design by default; choose WordPress Content in the page presentation box to use the editable body.', 'alify' ); ?></p>
