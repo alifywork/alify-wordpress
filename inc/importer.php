@@ -39,6 +39,23 @@ function alify_starter_content_manifest() {
 	);
 }
 
+/** Return a plain-text archive summary from the source page metadata when available. */
+function alify_get_source_excerpt( $slug ) {
+	$file = ALIFY_THEME_DIR . '/frontend-source/' . sanitize_file_name( $slug ) . '.html';
+	if ( ! is_readable( $file ) ) {
+		return '';
+	}
+	$markup = file_get_contents( $file );
+	if ( preg_match( '~<meta\s+name="description"\s+content="(.*?)"~i', $markup, $match ) ) {
+		$description = html_entity_decode( $match[1], ENT_QUOTES | ENT_HTML5, 'UTF-8' );
+		$description = sanitize_text_field( $description );
+		if ( $description ) {
+			return wp_trim_words( $description, 32, '' );
+		}
+	}
+	return '';
+}
+
 function alify_import_source_image( $post_id, $slug ) {
 	if ( get_post_meta( $post_id, '_alify_source_image', true ) ) {
 		return;
@@ -64,6 +81,7 @@ function alify_import_starter_content() {
 	$errors  = array();
 	foreach ( alify_starter_content_manifest() as $slug => $details ) {
 		list( $post_type, $title ) = $details;
+		$excerpt = alify_get_source_excerpt( $slug );
 		$existing = get_page_by_path( $slug, OBJECT, $post_type );
 		if ( $existing ) {
 			$id = $existing->ID;
@@ -75,7 +93,8 @@ function alify_import_starter_content() {
 					'post_status' => 'publish',
 					'post_title'  => $title,
 					'post_name'   => $slug,
-					'post_content'=> '',
+					'post_content' => '',
+					'post_excerpt' => $excerpt,
 			),
 				true
 			);
@@ -84,6 +103,11 @@ function alify_import_starter_content() {
 				continue;
 			}
 			++$created;
+		}
+
+		// Fill only blank summaries on matching records; never overwrite editor-authored excerpts.
+		if ( $excerpt && ! get_post_field( 'post_excerpt', $id ) ) {
+			wp_update_post( array( 'ID' => $id, 'post_excerpt' => $excerpt ) );
 		}
 
 		alify_import_source_image( $id, $slug );
@@ -116,7 +140,7 @@ function alify_content_setup_page() {
 			<div class="notice notice-success"><p><?php echo esc_html( sprintf( __( 'Setup complete: %1$d records created, %2$d already existed.', 'alify' ), $result['created'], $result['skipped'] ) ); ?></p></div>
 			<?php if ( ! empty( $result['errors'] ) ) : ?><div class="notice notice-error"><p><?php echo esc_html( implode( ' | ', $result['errors'] ) ); ?></p></div><?php endif; ?>
 		<?php endif; ?>
-		<p><?php esc_html_e( 'This creates starter titles and slugs only. The supplied PHP view provides the initial presentation; you can edit content in WordPress or add ACF Page Sections. Empty archive views remain available until you add items to those post types.', 'alify' ); ?></p>
+		<p><?php esc_html_e( 'This adds starter titles, slugs, and source-derived editable excerpts and image references. Existing matching records and editor-authored excerpts are preserved when rerun. Use the WordPress editor or ACF Page Sections to replace a supplied design with custom content.', 'alify' ); ?></p>
 		<form method="post">
 			<?php wp_nonce_field( 'alify_import_starter_content_action', 'alify_import_starter_content_nonce' ); ?>
 			<?php submit_button( __( 'Create / Repair Starter Pages & Content', 'alify' ), 'primary', 'alify_import_starter_content' ); ?>

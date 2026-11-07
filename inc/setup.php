@@ -20,3 +20,9 @@ function alify_theme_setup() {
 	);
 }
 add_action( 'after_setup_theme', 'alify_theme_setup' );
+
+/** Expose editable summaries for imported static-design Pages. */
+function alify_enable_page_excerpts() {
+	add_post_type_support( 'page', 'excerpt' );
+}
+add_action( 'init', 'alify_enable_page_excerpts' );

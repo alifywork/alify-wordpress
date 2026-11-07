@@ -27,3 +27,5 @@
 .alify-entry-data dt{margin-top:14px}.alify-entry-data dd{margin:4px 0 0;white-space:pre-wrap}
 @media(max-width:900px){.alify-content-cards,.alify-archive-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:600px){.alify-content-cards,.alify-archive-grid{grid-template-columns:1fr}}
+
+.footer__social-links{display:flex;flex-wrap:wrap;gap:14px;margin-top:18px}.footer__social-links a{display:inline-flex;align-items:center;gap:7px;color:var(--color-white);font-size:.82rem;text-decoration:none}.footer__social-links a:hover,.footer__social-links a:focus-visible{color:var(--color-amber)}.footer__social-links i{color:var(--color-amber)}

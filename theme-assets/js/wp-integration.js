@@ -91,6 +91,38 @@ window.alifyFixThemeMarkup = function (root) {
     });
   }
 
+  if (Array.isArray(config.socialLinks) && config.socialLinks.length) {
+    root.querySelectorAll(".footer__brand").forEach((brand) => {
+      const nav = document.createElement("nav");
+      nav.className = "footer__social-links";
+      nav.setAttribute("aria-label", "Social media links");
+      config.socialLinks.forEach((item) => {
+        if (!item || !item.label || !item.url) return;
+        let url;
+        try { url = new URL(item.url, window.location.href); } catch (_) { return; }
+        if (!["https:", "http:"].includes(url.protocol)) return;
+        const link = document.createElement("a");
+        link.href = url.href;
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+        link.setAttribute("aria-label", item.label);
+        const network = document.createElement("span");
+        network.className = "footer__social-name";
+        network.textContent = item.label;
+        const iconName = item.label.toLowerCase().replace(/[^a-z0-9-]+/g, "-").replace(/^-|-$/g, "");
+        if (iconName) {
+          const icon = document.createElement("i");
+          icon.className = `fa-brands fa-${iconName}`;
+          icon.setAttribute("aria-hidden", "true");
+          link.append(icon);
+        }
+        link.append(network);
+        nav.append(link);
+      });
+      if (nav.childElementCount) brand.append(nav);
+    });
+  }
+
   if (config.footerCopyright) {
     root.querySelectorAll(".footer__bottom [data-current-year]").forEach((year) => {
       const parent = year.parentElement;

@@ -8,6 +8,22 @@ function alify_source_assets_uri() {
 	return trailingslashit( ALIFY_THEME_URI ) . 'frontend-source/assets';
 }
 
+/** Normalize social profile rows before passing them to browser-facing code. */
+function alify_normalize_social_link( $row ) {
+	if ( ! is_array( $row ) || ! isset( $row['label'], $row['url'] ) || ! is_scalar( $row['label'] ) || ! is_scalar( $row['url'] ) || '' === $row['label'] || '' === $row['url'] ) {
+		return false;
+	}
+	$url    = esc_url_raw( $row['url'], array( 'http', 'https' ) );
+	$scheme = wp_parse_url( $url, PHP_URL_SCHEME );
+	if ( ! $url || ! in_array( strtolower( (string) $scheme ), array( 'http', 'https' ), true ) ) {
+		return false;
+	}
+	return array(
+		'label' => sanitize_text_field( $row['label'] ),
+		'url'   => $url,
+	);
+}
+
 /** Enqueue the locally bundled design system; no external asset CDN is used. */
 function alify_enqueue_frontend_assets() {
 	$base = alify_source_assets_uri();
@@ -77,6 +93,8 @@ function alify_enqueue_frontend_assets() {
 
 	$primary_menu = wp_nav_menu( array( 'theme_location' => 'primary', 'container' => false, 'menu_class' => 'header__nav-list', 'depth' => 1, 'echo' => false, 'fallback_cb' => false ) );
 	$footer_menu  = wp_nav_menu( array( 'theme_location' => 'footer', 'container' => false, 'menu_class' => 'footer__menu-list', 'depth' => 1, 'echo' => false, 'fallback_cb' => false ) );
+	$social_links = function_exists( 'get_field' ) ? get_field( 'social_links', 'option' ) : array();
+	$social_links = is_array( $social_links ) ? array_values( array_filter( array_map( 'alify_normalize_social_link', $social_links ) ) ) : array();
 
 	wp_localize_script(
 		'alify-wp-integration',
@@ -92,6 +110,7 @@ function alify_enqueue_frontend_assets() {
 			'contactEmail'     => function_exists( 'get_field' ) ? (string) get_field( 'contact_email', 'option' ) : '',
 			'contactPhone'     => function_exists( 'get_field' ) ? (string) get_field( 'contact_phone', 'option' ) : '',
 			'businessAddress'  => function_exists( 'get_field' ) ? (string) get_field( 'business_address', 'option' ) : '',
+			'socialLinks'      => $social_links,
 			'primaryMenuHtml'  => $primary_menu ? wp_kses_post( $primary_menu ) : '',
 			'footerMenuHtml'   => $footer_menu ? wp_kses_post( $footer_menu ) : '',
 		)

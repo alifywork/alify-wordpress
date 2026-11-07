@@ -343,7 +343,7 @@ function alify_handle_public_form_submission() {
 	$form_key = $form_id ? 'form-' . $form_id : $source;
 	$return_to = isset( $_POST['_alify_return_to'] ) && is_scalar( $_POST['_alify_return_to'] ) ? esc_url_raw( wp_unslash( $_POST['_alify_return_to'] ) ) : '';
 	$return_to = wp_validate_redirect( $return_to, home_url( '/' ) );
-	if ( ! in_array( $action, array( 'alify_submit_form', 'alify_submit_inquiry' ), true ) || ( 'alify_submit_form' === $action && ! $form_id ) || ( 'alify_submit_inquiry' === $action && ! in_array( $source, array( 'contact', 'start-project' ), true ) ) ) {
+	if ( ! in_array( $action, array( 'alify_submit_form', 'alify_submit_inquiry' ), true ) || ( 'alify_submit_form' === $action && ( ! $form_id || $source ) ) || ( 'alify_submit_inquiry' === $action && ( $form_id || ! in_array( $source, array( 'contact', 'start-project' ), true ) ) ) ) {
 		wp_die( esc_html__( 'Invalid form configuration.', 'alify' ), '', array( 'response' => 400 ) );
 	}
 

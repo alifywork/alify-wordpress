@@ -26,12 +26,12 @@ ACF Pro is optional for activation. When active it adds Theme Settings and field
 ## First-time setup
 
 1. Activate the theme and optionally activate ACF Pro.
-2. Go to **Appearance → Alify Setup** and click **Create / Repair Starter Pages & Content**. This creates the Pages, Services, Work, Case Studies, Industries, and Blog posts required by the source links. It is safe to rerun and does not overwrite matching content.
+2. Go to **Appearance → Alify Setup** and click **Create / Repair Starter Pages & Content**. This creates the Pages, Services, Work, Case Studies, Industries, and Blog posts required by the source links, along with source-derived editable excerpts and local source-image references. It is safe to rerun and preserves matching records and editor-authored excerpts.
 3. Set the homepage and Posts page under **Settings → Reading** if they are not already selected.
 4. Assign Primary and Footer menus under **Appearance → Menus**. Without assigned menus, the supplied navigation remains as a fallback.
 5. Save **Settings → Permalinks** once after activation to refresh rewrite rules.
 
-The importer adds starter titles and slugs, not duplicated static HTML content. The PHP source views supply the initial presentation. Add editor content or ACF sections to customize an individual item.
+The importer adds starter titles, slugs, source-derived summaries, and optional image references, but does not duplicate the static HTML into editable body content. PHP source views supply the original presentation; use the WordPress editor or ACF Page Sections to replace the source design with custom content. The dynamic archive cards display the editable excerpts.
 
 ## Forms and entries
 

@@ -68,7 +68,8 @@ function alify_register_admin_post_type( $slug, $plural, $singular, $icon, $hier
 			'public'          => false,
 			'show_ui'         => true,
 			'show_in_menu'    => true,
-			'show_in_rest'    => true,
+			// Keep internal form definitions and submissions out of the public REST API.
+			'show_in_rest'    => false,
 			'publicly_queryable' => false,
 			'exclude_from_search' => true,
 			'has_archive'     => false,
