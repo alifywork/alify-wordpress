@@ -59,6 +59,7 @@ function alify_register_acf_fields() {
 			'title' => __( 'General Theme Settings', 'alify' ),
 			'fields' => array(
 				array( 'key' => 'field_alify_site_logo', 'label' => __( 'Site Logo', 'alify' ), 'name' => 'site_logo', 'type' => 'image', 'return_format' => 'array', 'preview_size' => 'medium', 'library' => 'all' ),
+				array( 'key' => 'field_alify_social_share_image', 'label' => __( 'Default Social Share Image', 'alify' ), 'name' => 'social_share_image', 'type' => 'image', 'return_format' => 'array', 'preview_size' => 'medium', 'library' => 'all', 'instructions' => __( 'Use a landscape JPG or PNG around 1200 × 630 pixels. A content featured image overrides this default.', 'alify' ) ),
 				array( 'key' => 'field_alify_contact_email', 'label' => __( 'Contact Email', 'alify' ), 'name' => 'contact_email', 'type' => 'email' ),
 				array( 'key' => 'field_alify_contact_phone', 'label' => __( 'Contact Phone', 'alify' ), 'name' => 'contact_phone', 'type' => 'text' ),
 				array( 'key' => 'field_alify_address', 'label' => __( 'Business Address', 'alify' ), 'name' => 'business_address', 'type' => 'textarea', 'rows' => 3 ),

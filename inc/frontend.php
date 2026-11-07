@@ -98,13 +98,20 @@ function alify_normalize_social_link( $row ) {
 	);
 }
 
-/** Print a useful fallback description when no SEO plugin owns the document head. */
-function alify_output_meta_description() {
-	if ( defined( 'WPSEO_VERSION' ) || defined( 'RANK_MATH_VERSION' ) || defined( 'AIOSEO_VERSION' ) || defined( 'SEOPRESS_VERSION' ) || defined( 'THE_SEO_FRAMEWORK_VERSION' ) ) {
-		return;
+/** Detect common SEO plugins so the theme does not emit duplicate social metadata. */
+function alify_seo_plugin_active() {
+	foreach ( array( 'WPSEO_VERSION', 'RANK_MATH_VERSION', 'AIOSEO_VERSION', 'SEOPRESS_VERSION', 'THE_SEO_FRAMEWORK_VERSION', 'SLIM_SEO_VERSION' ) as $constant ) {
+		if ( defined( $constant ) ) {
+			return true;
+		}
 	}
+	return false;
+}
+
+/** Resolve a plain-text meta description for singular pages and archives. */
+function alify_get_meta_description() {
 	if ( is_search() || is_404() ) {
-		return;
+		return '';
 	}
 
 	$description = '';
@@ -153,12 +160,116 @@ function alify_output_meta_description() {
 		}
 	}
 
-	$description = wp_trim_words( sanitize_text_field( wp_strip_all_tags( $description ) ), 32, '' );
+	return wp_trim_words( sanitize_text_field( wp_strip_all_tags( $description ) ), 32, '' );
+}
+
+/** Print a useful fallback description when no SEO plugin owns the document head. */
+function alify_output_meta_description() {
+	if ( alify_seo_plugin_active() ) {
+		return;
+	}
+	$description = alify_get_meta_description();
 	if ( $description ) {
 		echo '<meta name="description" content="' . esc_attr( $description ) . '">' . "\n";
 	}
 }
 add_action( 'wp_head', 'alify_output_meta_description', 2 );
+
+/** Return validated social-image metadata from an attachment. */
+function alify_get_social_image_from_attachment( $attachment_id ) {
+	$attachment_id = absint( $attachment_id );
+	$mime_type     = $attachment_id ? get_post_mime_type( $attachment_id ) : '';
+	if ( ! $attachment_id || ! in_array( $mime_type, array( 'image/jpeg', 'image/png', 'image/webp' ), true ) ) {
+		return array();
+	}
+	$image = wp_get_attachment_image_src( $attachment_id, 'full' );
+	if ( ! is_array( $image ) || empty( $image[0] ) ) {
+		return array();
+	}
+	$url = esc_url_raw( $image[0], array( 'http', 'https' ) );
+	if ( ! $url ) {
+		return array();
+	}
+	return array(
+		'url'    => $url,
+		'type'   => $mime_type,
+		'width'  => absint( $image[1] ?? 0 ),
+		'height' => absint( $image[2] ?? 0 ),
+		'alt'    => sanitize_text_field( (string) get_post_meta( $attachment_id, '_wp_attachment_image_alt', true ) ),
+	);
+}
+
+/** Pick the entry's featured image first, then the site-wide social image. */
+function alify_get_social_image_data() {
+	$post_id       = is_singular() ? get_queried_object_id() : 0;
+	$attachment_id = $post_id ? get_post_thumbnail_id( $post_id ) : 0;
+	$image         = alify_get_social_image_from_attachment( $attachment_id );
+	if ( $image ) {
+		return $image;
+	}
+	if ( function_exists( 'get_field' ) ) {
+		$default_image = get_field( 'social_share_image', 'option' );
+		if ( is_array( $default_image ) ) {
+			$default_id = isset( $default_image['ID'] ) ? absint( $default_image['ID'] ) : 0;
+		} else {
+			$default_id = is_numeric( $default_image ) ? absint( $default_image ) : 0;
+		}
+		return alify_get_social_image_from_attachment( $default_id );
+	}
+	return array();
+}
+
+/** Add native Open Graph and Twitter metadata when no SEO plugin supplies it. */
+function alify_output_social_metadata() {
+	if ( alify_seo_plugin_active() || is_search() || is_404() ) {
+		return;
+	}
+	$title       = sanitize_text_field( wp_get_document_title() );
+	$description = alify_get_meta_description();
+	if ( ! $description ) {
+		$description = sanitize_text_field( get_bloginfo( 'description' ) );
+	}
+	$url = is_singular() ? get_permalink( get_queried_object_id() ) : get_pagenum_link( max( 1, absint( get_query_var( 'paged' ) ) ) );
+	$url = esc_url_raw( $url ? $url : home_url( '/' ), array( 'http', 'https' ) );
+	if ( ! $url ) {
+		return;
+	}
+	$type  = is_singular( 'post' ) ? 'article' : 'website';
+	$image = alify_get_social_image_data();
+
+	echo '<meta property="og:locale" content="' . esc_attr( str_replace( '-', '_', get_locale() ) ) . '">' . "\n";
+	echo '<meta property="og:site_name" content="' . esc_attr( get_bloginfo( 'name' ) ) . '">' . "\n";
+	echo '<meta property="og:type" content="' . esc_attr( $type ) . '">' . "\n";
+	echo '<meta property="og:title" content="' . esc_attr( $title ) . '">' . "\n";
+	echo '<meta property="og:url" content="' . esc_url( $url ) . '">' . "\n";
+	if ( $description ) {
+		echo '<meta property="og:description" content="' . esc_attr( $description ) . '">' . "\n";
+	}
+	if ( $image ) {
+		echo '<meta property="og:image" content="' . esc_url( $image['url'] ) . '">' . "\n";
+		echo '<meta property="og:image:type" content="' . esc_attr( $image['type'] ) . '">' . "\n";
+		if ( $image['width'] && $image['height'] ) {
+			echo '<meta property="og:image:width" content="' . esc_attr( $image['width'] ) . '">' . "\n";
+			echo '<meta property="og:image:height" content="' . esc_attr( $image['height'] ) . '">' . "\n";
+		}
+		if ( $image['alt'] ) {
+			echo '<meta property="og:image:alt" content="' . esc_attr( $image['alt'] ) . '">' . "\n";
+		}
+	}
+	$twitter_card = $image ? 'summary_large_image' : 'summary';
+	echo '<meta name="twitter:card" content="' . esc_attr( $twitter_card ) . '">' . "\n";
+	echo '<meta name="twitter:title" content="' . esc_attr( $title ) . '">' . "\n";
+	if ( $description ) {
+		echo '<meta name="twitter:description" content="' . esc_attr( $description ) . '">' . "\n";
+	}
+	if ( $image ) {
+		echo '<meta name="twitter:image" content="' . esc_url( $image['url'] ) . '">' . "\n";
+		if ( $image['alt'] ) {
+			echo '<meta name="twitter:image:alt" content="' . esc_attr( $image['alt'] ) . '">' . "\n";
+		}
+	}
+}
+add_action( 'wp_head', 'alify_output_social_metadata', 3 );
 
 /** Enqueue the locally bundled design system; no external asset CDN is used. */
 function alify_enqueue_frontend_assets() {
