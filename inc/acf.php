@@ -13,7 +13,7 @@ function alify_register_acf_options_pages() {
 			'page_title' => __( 'Theme Settings', 'alify' ),
 			'menu_title' => __( 'Theme Settings', 'alify' ),
 			'menu_slug'  => 'alify-theme-settings',
-			'capability' => 'manage_options',
+			'capability' => 'edit_theme_options',
 			'redirect'   => false,
 			'icon_url'   => 'dashicons-admin-customizer',
 			'position'   => 59,
@@ -25,7 +25,7 @@ function alify_register_acf_options_pages() {
 			'page_title'  => __( 'General Settings', 'alify' ),
 			'menu_title'  => __( 'General', 'alify' ),
 			'parent_slug' => 'alify-theme-settings',
-			'capability'  => 'manage_options',
+			'capability'  => 'edit_theme_options',
 		)
 	);
 	acf_add_options_sub_page(
@@ -33,7 +33,7 @@ function alify_register_acf_options_pages() {
 			'page_title'  => __( 'Header & Footer Settings', 'alify' ),
 			'menu_title'  => __( 'Header & Footer', 'alify' ),
 			'parent_slug' => 'alify-theme-settings',
-			'capability'  => 'manage_options',
+			'capability'  => 'edit_theme_options',
 		)
 	);
 	acf_add_options_sub_page(
