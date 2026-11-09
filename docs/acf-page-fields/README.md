@@ -2,9 +2,10 @@
 
 Generated from all 39 bundled source pages in `frontend-source/*.html` by `tools/generate-acf-page-field-docs.py`.
 
-These per-page inventories record current source values, suggested editable fields, image alternatives, links, and form controls. They are the planning artifacts for the next phase: registering page-specific ACF field groups in code and connecting those fields to page rendering.
+The companion `inc/acf-page-field-data.json` is the runtime schema used to register the page-specific ACF fields and preserve each source section as its default HTML.
+Every singular source page has a page-specific ACF field group registered in PHP. The eight dynamic archive pages have corresponding SEO, hero, and section fields under Theme Settings → Archive Pages. On populated archives, saved static section edits render after live results; bundled article cards are omitted while WordPress drives cards, search, and pagination. Section WYSIWYG editors support formatted text and raw HTML; link URLs and image/alt overrides are separate fields. Forms expose separate copy/label editing while theme-owned control markup and validation stay fixed.
 
-Existing shared Theme Settings and generic Page Sections are defined in `inc/acf.php`; these inventories are not yet registered as page-specific ACF groups.
+The source defaults and renderer mappings are generated into `inc/acf-page-field-data.json`. Shared Theme Settings and the generic Flexible Content builder remain defined in `inc/acf.php`. The ACF groups are local PHP registrations; no ACF export plugin or generated database JSON is required.
 
 ## Pages
 

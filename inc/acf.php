@@ -44,6 +44,14 @@ function alify_register_acf_options_pages() {
 			'capability'  => 'manage_options',
 		)
 	);
+	acf_add_options_sub_page(
+		array(
+			'page_title'  => __( 'Archive Pages', 'alify' ),
+			'menu_title'  => __( 'Archive Pages', 'alify' ),
+			'parent_slug' => 'alify-theme-settings',
+			'capability'  => 'edit_theme_options',
+		)
+	);
 }
 add_action( 'acf/init', 'alify_register_acf_options_pages' );
 
@@ -114,15 +122,16 @@ function alify_register_acf_fields() {
 			'key' => 'group_alify_content_builder',
 			'title' => __( 'Alify Page Content', 'alify' ),
 			'fields' => array(
-				array( 'key' => 'field_alify_hero_eyebrow', 'label' => __( 'Hero Eyebrow', 'alify' ), 'name' => 'hero_eyebrow', 'type' => 'text' ),
-				array( 'key' => 'field_alify_hero_title', 'label' => __( 'Hero Title', 'alify' ), 'name' => 'hero_title', 'type' => 'text' ),
-				array( 'key' => 'field_alify_hero_description', 'label' => __( 'Hero Description', 'alify' ), 'name' => 'hero_description', 'type' => 'textarea', 'rows' => 3 ),
+				array( 'key' => 'field_alify_hero_eyebrow', 'label' => __( 'Hero Eyebrow (text + HTML)', 'alify' ), 'name' => 'hero_eyebrow', 'type' => 'wysiwyg', 'tabs' => 'all', 'toolbar' => 'basic', 'media_upload' => 0, 'delay' => 1 ),
+				array( 'key' => 'field_alify_hero_title', 'label' => __( 'Hero Title (text + HTML)', 'alify' ), 'name' => 'hero_title', 'type' => 'wysiwyg', 'tabs' => 'all', 'toolbar' => 'basic', 'media_upload' => 0, 'delay' => 1 ),
+				array( 'key' => 'field_alify_hero_description', 'label' => __( 'Hero Description (text + HTML)', 'alify' ), 'name' => 'hero_description', 'type' => 'wysiwyg', 'tabs' => 'all', 'toolbar' => 'basic', 'media_upload' => 0, 'delay' => 1 ),
 				array( 'key' => 'field_alify_hero_background', 'label' => __( 'Hero Background', 'alify' ), 'name' => 'hero_background', 'type' => 'select', 'choices' => array(
 					'neon-lines-01.webp' => 'Neon 01', 'neon-lines-02.webp' => 'Neon 02', 'neon-lines-03.webp' => 'Neon 03', 'neon-lines-04.webp' => 'Neon 04',
 					'neon-lines-05.webp' => 'Neon 05', 'neon-lines-06.webp' => 'Neon 06', 'neon-lines-07.webp' => 'Neon 07', 'neon-lines-08.webp' => 'Neon 08',
 					'neon-lines-09.webp' => 'Neon 09', 'neon-lines-10.webp' => 'Neon 10', 'neon-lines-11.webp' => 'Neon 11', 'neon-lines-12.webp' => 'Neon 12',
 					'neon-lines-13.webp' => 'Neon 13', 'neon-lines-14.webp' => 'Neon 14',
 			), 'ui' => 1 ),
+				array( 'key' => 'field_alify_hero_variant', 'label' => __( 'Hero Layout Variant', 'alify' ), 'name' => 'hero_variant', 'type' => 'select', 'choices' => array( '' => __( 'Default', 'alify' ), 'mirror-right' => __( 'Mirror Right', 'alify' ), 'close-up' => __( 'Close Up', 'alify' ), 'soft-focus' => __( 'Soft Focus', 'alify' ) ), 'ui' => 1 ),
 				array( 'key' => 'field_alify_page_sections', 'label' => __( 'Page Sections', 'alify' ), 'name' => 'page_sections', 'type' => 'flexible_content', 'button_label' => __( 'Add Section', 'alify' ), 'layouts' => array(
 					'layout_alify_text_section' => array(
 						'key' => 'layout_alify_text_section', 'name' => 'text_section', 'label' => __( 'Text Section', 'alify' ), 'display' => 'block',
@@ -198,3 +207,6 @@ function alify_register_acf_fields() {
 	// so forms remain editable without ACF Pro and avoid duplicate builder interfaces.
 }
 add_action( 'acf/init', 'alify_register_acf_fields' );
+
+// Page-specific, section-level HTML editors and media/link overrides.
+require_once ALIFY_THEME_DIR . '/inc/acf-pages.php';

@@ -42,7 +42,43 @@ if ( is_search() ) {
 	$eyebrow = __( 'The Alify Journal', 'alify' );
 }
 ?>
-<?php echo alify_page_hero_fallback_markup( $eyebrow, $heading, wp_strip_all_tags( $copy ), 'neon-lines-01.webp' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- helper escapes all dynamic content. ?>
+<?php
+$archive_eyebrow_html = null;
+$archive_title_html = null;
+$archive_description_html = null;
+$archive_background = 'neon-lines-01.webp';
+$archive_variant = '';
+if ( ( is_home() || is_post_type_archive() ) && function_exists( 'alify_current_source_view' ) && function_exists( 'get_field' ) ) {
+	$archive_view = alify_current_source_view( '' );
+	if ( $archive_view ) {
+		$archive_prefix = 'alify_archive_' . sanitize_key( $archive_view ) . '_hero_';
+		$eyebrow_value = get_field( $archive_prefix . 'eyebrow_html', 'option' );
+		$title_value = get_field( $archive_prefix . 'title_html', 'option' );
+		$description_value = get_field( $archive_prefix . 'description_html', 'option' );
+		$background_value = get_field( $archive_prefix . 'background', 'option' );
+		$variant_value = get_field( $archive_prefix . 'variant', 'option' );
+		if ( is_string( $eyebrow_value ) && '' !== trim( $eyebrow_value ) ) {
+			$archive_eyebrow_html = $eyebrow_value;
+			$eyebrow = wp_strip_all_tags( $eyebrow_value );
+		}
+		if ( is_string( $background_value ) && preg_match( '/^neon-lines-(?:0[1-9]|1[0-4])\\.webp$/', $background_value ) ) {
+			$archive_background = $background_value;
+		}
+		if ( is_string( $variant_value ) && in_array( $variant_value, array( 'mirror-right', 'close-up', 'soft-focus' ), true ) ) {
+			$archive_variant = $variant_value;
+		}
+		if ( is_string( $title_value ) && '' !== trim( $title_value ) ) {
+			$archive_title_html = $title_value;
+			$heading = wp_strip_all_tags( $title_value );
+		}
+		if ( is_string( $description_value ) && '' !== trim( $description_value ) ) {
+			$archive_description_html = $description_value;
+			$copy = $description_value;
+		}
+	}
+}
+echo alify_page_hero_fallback_markup( $eyebrow, $heading, wp_strip_all_tags( $copy ), $archive_background, $archive_variant, $archive_eyebrow_html, $archive_title_html, $archive_description_html ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- helper sanitizes inline HTML and escapes attributes.
+?>
 <main class="inner-page" id="main-content">
 	<section class="page-section alify-dynamic-archive"><div class="container"><div class="row"><div class="col-12">
 		<?php if ( $copy ) : ?><div class="alify-archive-intro"><?php echo wp_kses_post( $copy ); ?></div><?php endif; ?>
@@ -83,3 +119,8 @@ if ( is_search() ) {
 		<?php endif; ?>
 	</div></div></div></section>
 </main>
+<?php
+if ( ! empty( $archive_view ) && function_exists( 'alify_render_archive_editorial_sections' ) ) {
+	alify_render_archive_editorial_sections( $archive_view );
+}
+?>

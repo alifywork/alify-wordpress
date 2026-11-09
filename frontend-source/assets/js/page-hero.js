@@ -8,6 +8,12 @@ class PageHero extends HTMLElement {
     const eyebrow = this.getAttribute("eyebrow") || "Alify";
     const title = this.getAttribute("title") || "Digital experiences with purpose.";
     const description = this.getAttribute("description") || "";
+    // These rich HTML values are escaped/sanitized by the server before they
+    // are placed in attributes; plain attribute text remains the fallback.
+    const eyebrowHtml = this.getAttribute("eyebrow-html");
+    const titleHtml = this.getAttribute("title-html");
+    const descriptionHtml = this.getAttribute("description-html");
+    const renderHeroValue = (richValue, plainValue) => richValue === null ? this.escapeHTML(plainValue) : richValue;
     const requestedBackground = this.getAttribute("background") || "neon-lines-01.webp";
     const background = /^neon-lines-(?:0[1-9]|1[0-4])\.webp$/.test(requestedBackground)
       ? requestedBackground
@@ -27,9 +33,9 @@ class PageHero extends HTMLElement {
             <div class="row">
               <div class="col-12">
                 <div class="page-hero__content">
-                  <p class="page-hero__eyebrow">${this.escapeHTML(eyebrow)}</p>
-                  <h1 class="page-hero__title" id="page-hero-title">${this.escapeHTML(title)}</h1>
-                  <p class="page-hero__description">${this.escapeHTML(description)}</p>
+                  <p class="page-hero__eyebrow">${renderHeroValue(eyebrowHtml, eyebrow)}</p>
+                  <h1 class="page-hero__title" id="page-hero-title">${renderHeroValue(titleHtml, title)}</h1>
+                  <p class="page-hero__description">${renderHeroValue(descriptionHtml, description)}</p>
                 </div>
               </div>
             </div>

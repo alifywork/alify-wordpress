@@ -42,7 +42,7 @@ function alify_nojs_footer_menu_fallback( $args = array() ) {
 }
 
 /** Render an accessible server-side fallback inside the client-enhanced page hero. */
-function alify_page_hero_fallback_markup( $eyebrow, $title, $description, $background = 'neon-lines-01.webp', $variant = '' ) {
+function alify_page_hero_fallback_markup( $eyebrow, $title, $description, $background = 'neon-lines-01.webp', $variant = '', $eyebrow_html = null, $title_html = null, $description_html = null ) {
 	$background = is_string( $background ) && preg_match( '/^neon-lines-(?:0[1-9]|1[0-4])\\.webp$/', $background ) ? $background : 'neon-lines-01.webp';
 	$variant    = is_string( $variant ) && in_array( $variant, array( 'mirror-right', 'close-up', 'soft-focus' ), true ) ? $variant : '';
 	$variant_class = $variant ? ' page-hero--' . $variant : '';
@@ -51,10 +51,23 @@ function alify_page_hero_fallback_markup( $eyebrow, $title, $description, $backg
 	$title         = is_scalar( $title ) ? (string) $title : get_bloginfo( 'name' );
 	$description   = is_scalar( $description ) ? (string) $description : '';
 
-	return '<page-hero eyebrow="' . esc_attr( $eyebrow ) . '" title="' . esc_attr( $title ) . '" description="' . esc_attr( $description ) . '" background="' . esc_attr( $background ) . '" variant="' . esc_attr( $variant ) . '">'
+	$eyebrow_content     = null !== $eyebrow_html && function_exists( 'alify_sanitize_page_inline_html' ) ? alify_sanitize_page_inline_html( $eyebrow_html ) : esc_html( $eyebrow );
+	$title_content       = null !== $title_html && function_exists( 'alify_sanitize_page_inline_html' ) ? alify_sanitize_page_inline_html( $title_html ) : esc_html( $title );
+	$description_content = null !== $description_html && function_exists( 'alify_sanitize_page_inline_html' ) ? alify_sanitize_page_inline_html( $description_html ) : esc_html( $description );
+	$attributes          = '<page-hero eyebrow="' . esc_attr( $eyebrow ) . '" title="' . esc_attr( $title ) . '" description="' . esc_attr( $description ) . '" background="' . esc_attr( $background ) . '" variant="' . esc_attr( $variant ) . '"';
+	if ( null !== $eyebrow_html ) {
+		$attributes .= ' eyebrow-html="' . esc_attr( $eyebrow_content ) . '"';
+	}
+	if ( null !== $title_html ) {
+		$attributes .= ' title-html="' . esc_attr( $title_content ) . '"';
+	}
+	if ( null !== $description_html ) {
+		$attributes .= ' description-html="' . esc_attr( $description_content ) . '"';
+	}
+	return $attributes . '>'
 		. '<div class="page-hero' . esc_attr( $variant_class ) . '"><div class="page-hero__media" aria-hidden="true"><img src="' . $asset_url . '" alt="" width="1920" height="1080" fetchpriority="high"></div>'
 		. '<section class="page-hero__section" aria-labelledby="page-hero-title"><div class="container page-hero__container"><div class="row"><div class="col-12"><div class="page-hero__content">'
-		. '<p class="page-hero__eyebrow">' . esc_html( $eyebrow ) . '</p><h1 class="page-hero__title" id="page-hero-title">' . esc_html( $title ) . '</h1><p class="page-hero__description">' . esc_html( $description ) . '</p>'
+		. '<p class="page-hero__eyebrow">' . $eyebrow_content . '</p><h1 class="page-hero__title" id="page-hero-title">' . $title_content . '</h1><p class="page-hero__description">' . $description_content . '</p>'
 		. '</div></div></div></div></section></div></page-hero>';
 }
 
@@ -65,7 +78,7 @@ function alify_add_page_hero_fallbacks( $markup ) {
 		function ( $matches ) {
 			$attributes = shortcode_parse_atts( $matches[1] );
 			$attributes = is_array( $attributes ) ? $attributes : array();
-			foreach ( array( 'eyebrow', 'title', 'description', 'background', 'variant' ) as $key ) {
+			foreach ( array( 'eyebrow', 'title', 'description', 'background', 'variant', 'eyebrow-html', 'title-html', 'description-html' ) as $key ) {
 				if ( isset( $attributes[ $key ] ) && is_scalar( $attributes[ $key ] ) ) {
 					$attributes[ $key ] = html_entity_decode( (string) $attributes[ $key ], ENT_QUOTES | ENT_HTML5, 'UTF-8' );
 				}
@@ -75,7 +88,10 @@ function alify_add_page_hero_fallbacks( $markup ) {
 				$attributes['title'] ?? get_bloginfo( 'name' ),
 				$attributes['description'] ?? '',
 				$attributes['background'] ?? 'neon-lines-01.webp',
-				$attributes['variant'] ?? ''
+				$attributes['variant'] ?? '',
+				$attributes['eyebrow-html'] ?? null,
+				$attributes['title-html'] ?? null,
+				$attributes['description-html'] ?? null
 			);
 		},
 		$markup
@@ -116,8 +132,13 @@ function alify_get_meta_description() {
 
 	$description = '';
 	if ( is_singular() ) {
-		$post_id     = get_queried_object_id();
-		$description = trim( (string) get_post_field( 'post_excerpt', $post_id ) );
+		$post_id = get_queried_object_id();
+		if ( function_exists( 'get_field' ) ) {
+			$description = trim( (string) get_field( 'alify_meta_description', $post_id ) );
+		}
+		if ( ! $description ) {
+			$description = trim( (string) get_post_field( 'post_excerpt', $post_id ) );
+		}
 		if ( ! $description && function_exists( 'alify_current_source_view' ) && function_exists( 'alify_get_source_excerpt' ) ) {
 			$source_view = alify_current_source_view();
 			if ( $source_view ) {
@@ -137,7 +158,15 @@ function alify_get_meta_description() {
 			$description = single_term_title( '', false ) . ' — ' . get_bloginfo( 'description' );
 		}
 	} elseif ( is_post_type_archive() || is_home() ) {
-		$description = function_exists( 'get_field' ) ? (string) get_field( 'archive_description', 'option' ) : '';
+		if ( function_exists( 'get_field' ) && function_exists( 'alify_current_source_view' ) ) {
+			$archive_view = alify_current_source_view( '' );
+			if ( $archive_view ) {
+				$description = (string) get_field( 'alify_archive_' . sanitize_key( $archive_view ) . '_meta_description', 'option' );
+			}
+		}
+		if ( ! $description ) {
+			$description = function_exists( 'get_field' ) ? (string) get_field( 'archive_description', 'option' ) : '';
+		}
 		if ( ! $description && is_post_type_archive() && function_exists( 'alify_current_source_view' ) && function_exists( 'alify_get_source_excerpt' ) ) {
 			$source_view = alify_current_source_view();
 			if ( $source_view ) {
@@ -174,6 +203,28 @@ function alify_output_meta_description() {
 	}
 }
 add_action( 'wp_head', 'alify_output_meta_description', 2 );
+
+/** Use a page's coded ACF SEO title when no SEO plugin owns the title tag. */
+function alify_filter_document_title_from_acf( $title ) {
+	if ( alify_seo_plugin_active() || ! function_exists( 'get_field' ) ) {
+		return $title;
+	}
+	if ( is_singular() ) {
+		$custom_title = trim( (string) get_field( 'alify_seo_title', get_queried_object_id() ) );
+		return $custom_title ? sanitize_text_field( $custom_title ) : $title;
+	}
+	if ( is_home() || is_post_type_archive() ) {
+		$archive_view = function_exists( 'alify_current_source_view' ) ? alify_current_source_view( '' ) : '';
+		if ( $archive_view ) {
+			$custom_title = trim( (string) get_field( 'alify_archive_' . sanitize_key( $archive_view ) . '_seo_title', 'option' ) );
+			if ( $custom_title ) {
+				return sanitize_text_field( $custom_title );
+			}
+		}
+	}
+	return $title;
+}
+add_filter( 'pre_get_document_title', 'alify_filter_document_title_from_acf', 20 );
 
 /** Add canonical URLs to archives/front pages where WordPress core does not emit one. */
 function alify_output_archive_canonical() {
@@ -511,9 +562,9 @@ function alify_render_acf_page_builder() {
 		return false;
 	}
 
-	$eyebrow     = get_field( 'hero_eyebrow' );
-	$hero_title  = get_field( 'hero_title' );
-	$description = get_field( 'hero_description' );
+	$eyebrow     = get_field( 'hero_eyebrow', false, false );
+	$hero_title  = get_field( 'hero_title', false, false );
+	$description = get_field( 'hero_description', false, false );
 	$background  = get_field( 'hero_background' );
 	if ( ! $hero_title ) {
 		$hero_title = get_the_title();
@@ -525,7 +576,7 @@ function alify_render_acf_page_builder() {
 		$background = 'neon-lines-01.webp';
 	}
 	?>
-	<?php echo alify_page_hero_fallback_markup( $eyebrow, $hero_title, $description, $background ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- helper escapes all dynamic content. ?>
+	<?php echo alify_page_hero_fallback_markup( $eyebrow, $hero_title, $description, $background, '', $eyebrow, $hero_title, $description ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- helper sanitizes inline hero markup and escapes attributes. ?>
 	<main class="inner-page" id="main-content">
 	<?php
 	while ( have_rows( 'page_sections' ) ) :
@@ -679,25 +730,42 @@ function alify_render_source_view( $slug ) {
 	ob_start();
 	include $file;
 	$markup = ob_get_clean();
+	if ( function_exists( 'alify_apply_source_page_acf_fields' ) ) {
+		$markup = alify_apply_source_page_acf_fields( $markup, $slug );
+	}
 	if ( is_singular() && function_exists( 'get_field' ) ) {
+		$post_id = get_queried_object_id();
 		$hero_fields = array(
-			'eyebrow'     => get_field( 'hero_eyebrow' ),
-			'title'       => get_field( 'hero_title' ),
-			'description' => get_field( 'hero_description' ),
-			'background'  => get_field( 'hero_background' ),
+			'eyebrow'     => get_field( 'hero_eyebrow', $post_id, false ),
+			'title'       => get_field( 'hero_title', $post_id, false ),
+			'description' => get_field( 'hero_description', $post_id, false ),
+			'background'  => get_field( 'hero_background', $post_id, false ),
+			'variant'     => get_field( 'hero_variant', $post_id, false ),
 		);
 		foreach ( $hero_fields as $attribute => $value ) {
-			if ( ! $value ) {
+			if ( ! is_string( $value ) || '' === trim( $value ) ) {
 				continue;
 			}
-			$pattern = '/(<page-hero\\b[^>]*\\b' . preg_quote( $attribute, '/' ) . '=)(["\']).*?\\2/i';
-			$markup  = preg_replace_callback(
-				$pattern,
-				function ( $matches ) use ( $value ) {
-					return $matches[1] . $matches[2] . esc_attr( $value ) . $matches[2];
+			$component_value = in_array( $attribute, array( 'eyebrow', 'title', 'description' ), true ) ? wp_strip_all_tags( $value ) : $value;
+			$markup = preg_replace_callback(
+				'~<page-hero\\b[^>]*>~i',
+				function ( $matches ) use ( $attribute, $component_value ) {
+					return function_exists( 'alify_set_html_attribute' ) ? alify_set_html_attribute( $matches[0], $attribute, $component_value ) : $matches[0];
 				},
-				$markup
+				$markup,
+				1
 			);
+			if ( in_array( $attribute, array( 'eyebrow', 'title', 'description' ), true ) && function_exists( 'alify_sanitize_page_inline_html' ) && function_exists( 'alify_set_html_attribute' ) ) {
+				$html_value = alify_sanitize_page_inline_html( $value );
+				$markup = preg_replace_callback(
+					'~<page-hero\\b[^>]*>~i',
+					function ( $matches ) use ( $attribute, $html_value ) {
+						return alify_set_html_attribute( $matches[0], $attribute . '-html', $html_value );
+					},
+					$markup,
+					1
+				);
+			}
 		}
 		if ( 'index' === $slug ) {
 			$home_fields = array(
@@ -706,12 +774,13 @@ function alify_render_source_view( $slug ) {
 				'hero_description' => '~(<p class="intro__text">).*?(</p>)~is',
 			);
 			foreach ( $home_fields as $field_name => $home_pattern ) {
-				$value = get_field( $field_name );
-				if ( $value ) {
-					$markup = preg_replace_callback( $home_pattern, function ( $matches ) use ( $value ) { return $matches[1] . esc_html( $value ) . $matches[2]; }, $markup, 1 );
+				$value = get_field( $field_name, $post_id, false );
+				if ( is_string( $value ) && '' !== trim( $value ) ) {
+					$html_value = function_exists( 'alify_sanitize_page_inline_html' ) ? alify_sanitize_page_inline_html( $value ) : esc_html( $value );
+					$markup = preg_replace_callback( $home_pattern, function ( $matches ) use ( $html_value ) { return $matches[1] . $html_value . $matches[2]; }, $markup, 1 );
 				}
 			}
-			$background = get_field( 'hero_background' );
+			$background = get_field( 'hero_background', $post_id, false );
 			if ( $background && preg_match( '/^neon-lines-(?:0[1-9]|1[0-4])\\.webp$/', $background ) ) {
 				$markup = preg_replace( '~(assets/images/background/)neon-lines-(?:0[1-9]|1[0-4])\\.webp~', '$1' . $background, $markup, 1 );
 			}

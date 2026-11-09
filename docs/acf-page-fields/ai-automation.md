@@ -2,7 +2,7 @@
 
 Source: [`frontend-source/ai-automation.html`](../../frontend-source/ai-automation.html)
 
-> Inventory phase only. This file records editable content slots and their current source values. It does not register fields or change the live WordPress content. The next implementation phase will define/register page-specific ACF groups and render these values through PHP.
+> This page has a coded ACF field group. Section editors support both visual text formatting and raw HTML; optional link URLs, image replacements, and image alternative text are separate controls. The inventory below documents the source defaults and element map used by the theme.
 
 Shared header/footer navigation and global contact/social settings are configured once in Theme Settings; they are not repeated as page-specific fields.
 
@@ -153,7 +153,7 @@ Interaction/filter data: `data-faq-filter` = `all`; `data-faq-filter` = `project
 
 ## Shared implementation notes
 
-- Keep field keys unique and stable; use these suggested `name` values as the page-group field names or prefix them consistently.
-- Use Repeater/Flexible Content subfields for repeated cards, FAQs, process steps, statistics, testimonials, and similar collections instead of one field per current example item.
-- Preserve accessibility metadata as editable values where it is content-dependent: image alt text, link labels, section labels, and form labels.
-- Keep security-critical form action/nonces and consent validation in PHP; do not turn those implementation details into editor-editable fields.
+- Each top-level section is edited in one page-specific WYSIWYG field with Visual and Text tabs; the Text tab accepts HTML. The source section wrapper/layout remains theme-controlled.
+- Link destinations and images/alt text have separate optional ACF overrides; leave them blank to retain the section HTML's original values.
+- Repeated cards, FAQ items, process steps, statistics, and testimonials are edited together in their containing section HTML so the current page design is preserved.
+- Form action/nonces, field names, required flags, choice values, and server validation remain theme-controlled; don't remove these form-control attributes while editing section HTML.
