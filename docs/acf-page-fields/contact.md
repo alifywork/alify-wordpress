@@ -2,7 +2,7 @@
 
 Source: [`frontend-source/contact.html`](../../frontend-source/contact.html)
 
-> This page has a coded ACF field group. Section editors support both visual text formatting and raw HTML; optional link URLs, image replacements, and image alternative text are separate controls. The inventory below documents the source defaults and element map used by the theme.
+> This page has structured fields for individual headings, paragraphs, labels, links, and images within each source section. Repeated cards and list items use template-matched ACF Repeater subfields where the source layout repeats; all other content uses separate template-specific fields.
 
 Shared header/footer navigation and global contact/social settings are configured once in Theme Settings; they are not repeated as page-specific fields.
 
@@ -28,26 +28,26 @@ Shared header/footer navigation and global contact/social settings are configure
 
 Section metadata: aria-label: `Contact form`.
 
-- `section_01_copy_01` — **Copy** (HTML `p`): Let’s talk
-- `section_01_heading_01` — **Heading** (HTML `h2`): Tell us what you’re working on.
-- `section_01_copy_02` — **Copy** (HTML `p`): A rough idea is enough to begin. Share the challenge, what you want to change, and where you think we can help.
-- `section_01_list_item_01` — **List Item** (HTML `li`): A focused first response
-- `section_01_list_item_02` — **List Item** (HTML `li`): No hard sell
-- `section_01_list_item_03` — **List Item** (HTML `li`): A clear recommended next step
-- `section_01_link_label_01` — **Link Label** (HTML `a`): hello@alify.com
-- `section_01_field_label_01` — **Field Label** (HTML `label`): Name
-- `section_01_field_label_02` — **Field Label** (HTML `label`): Work email
-- `section_01_field_label_03` — **Field Label** (HTML `label`): Company
-- `section_01_field_label_04` — **Field Label** (HTML `label`): What can we help with?
-- `section_01_field_label_05` — **Field Label** (HTML `label`): Tell us about the challenge
-- `section_01_field_label_06` — **Field Label** (HTML `label`): I have read the privacy policy and agree that ALIFY may use these details to respond to my inquiry.
-- `section_01_button_label_01` — **Button Label** (HTML `button`): Prepare email
-- `section_01_copy_03` — **Copy** (HTML `p`): Submitting opens your email app with these details pre-filled.
+Structured section fields:
+- `section_01_element_01` — **textarea** (p): Let’s talk
+- `section_01_element_02` — **text** (h2): Tell us what you’re working on.
+- `section_01_element_03` — **textarea** (p): A rough idea is enough to begin. Share the challenge, what you want to change, and where y
+- `section_01_element_04` — **text** (a): hello@alify.com
+
 
 Link destinations:
 - `section_01_link_01_url` — hello@alify.com → `mailto:hello@alify.com`
 
-Form `section_01_form_01` — separate WYSIWYG field for labels and safe HTML; keep the `ALIFY_CONTROL_XX` placeholders so the validated server-owned controls are restored in place:
+Form `section_01_form_01` — individual fields for labels/copy plus protected theme controls:
+- `section_01_form_01_element_01` — **text** (label): Name
+- `section_01_form_01_element_02` — **text** (label): Work email
+- `section_01_form_01_element_03` — **text** (label): Company
+- `section_01_form_01_element_04` — **text** (label): What can we help with?
+- `section_01_form_01_element_05` — **text** (label): Tell us about the challenge
+- `section_01_form_01_element_06` — **wysiwyg** (label): I have read the privacy policy and agree that ALIFY may use these details to respond to my
+- `section_01_form_01_element_07` — **text** (button): Prepare email
+- `section_01_form_01_element_08` — **textarea** (p): Submitting opens your email app with these details pre-filled.
+- Form controls, choices, validation, and submission behavior remain theme-managed.
 - `section_01_form_01_field_01` — `type=text`, `name=name`, `id=contact-name`, `label=Name`, `required`, `autocomplete=name`
 - `section_01_form_01_field_02` — `type=email`, `name=email`, `id=contact-email`, `label=Work email`, `required`, `autocomplete=email`
 - `section_01_form_01_field_03` — `type=text`, `name=company`, `id=contact-company`, `label=Company`, `autocomplete=organization`
@@ -56,27 +56,21 @@ Form `section_01_form_01` — separate WYSIWYG field for labels and safe HTML; k
 - `section_01_form_01_field_05` — `type=textarea`, `name=message`, `id=contact-message`, `label=Tell us about the challenge`, `required`
 - `section_01_form_01_field_06` — `type=checkbox`, `name=privacyConsent`, `required`
 
+List group 01: 3 source items (li)
+- List repeater `section_01_list_01_items` — add, remove, or reorder rows while the theme retains the source layout.
+  - `section_01_list_01_items.element_01` — **textarea** (li): A focused first response
+
 ### 02. Contact next steps
 
 Section metadata: aria-label: `Contact next steps`.
 
-- `section_02_copy_01` — **Copy** (HTML `p`): What happens next
-- `section_02_heading_01` — **Heading** (HTML `h2`): A simple start, without the hard sell.
-- `section_02_copy_02` — **Copy** (HTML `p`): Three clear steps from your first note to a useful recommendation.
-- `section_02_heading_02` — **Heading** (HTML `h3`): We read the context
-- `section_02_copy_03` — **Copy** (HTML `p`): We review your note, links, and goals so the first conversation can be useful.
-- `section_02_heading_03` — **Heading** (HTML `h3`): We arrange a conversation
-- `section_02_copy_04` — **Copy** (HTML `p`): We discuss the problem, priorities, timing, and the people involved.
-- `section_02_heading_04` — **Heading** (HTML `h3`): You receive a clear route
-- `section_02_copy_05` — **Copy** (HTML `p`): We outline the recommended scope, approach, investment, and next steps.
-- `section_02_heading_05` — **Heading** (HTML `h3`): You decide what follows
-- `section_02_copy_06` — **Copy** (HTML `p`): Take the time you need to review the route and align your team.
-- `section_02_inline_text_01` — **Inline Text** (HTML `span`): 01
-- `section_02_inline_text_02` — **Inline Text** (HTML `span`): 02
-- `section_02_inline_text_03` — **Inline Text** (HTML `span`): 03
-- `section_02_inline_text_04` — **Inline Text** (HTML `span`): 04
+Structured section fields:
+- `section_02_element_01` — **textarea** (p): What happens next
+- `section_02_element_02` — **text** (h2): A simple start, without the hard sell.
+- `section_02_element_03` — **textarea** (p): Three clear steps from your first note to a useful recommendation.
 
-Repeated content: 4 `<article>` item(s) detected. Implement as an ACF Repeater/Flexible Content layout where editors need to add, remove, or reorder items; expose each item's heading, copy, image/alt, link label, and link URL as subfields when present.
+
+Repeater `section_02_cards` — 4 starter rows; each row has individual content, link URL, and image/alt subfields. Add, remove, or reorder rows in ACF.
 
 ### 03. Contact FAQs
 
@@ -84,25 +78,27 @@ Section metadata: aria-label: `Contact FAQs`.
 
 Interaction/filter data: `data-faq-filter` = `all`; `data-faq-filter` = `projects`; `data-faq-filter` = `process`; `data-faq-filter` = `support`; `data-category` = `projects`; `data-category` = `process`; `data-category` = `support`.
 
-- `section_03_copy_01` — **Copy** (HTML `p`): Before you ask
-- `section_03_heading_01` — **Heading** (HTML `h2`): A few quick answers.
-- `section_03_copy_02` — **Copy** (HTML `p`): Search the essentials or filter by topic.
-- `section_03_field_label_01` — **Field Label** (HTML `label`): Search frequently asked questions
-- `section_03_button_label_01` — **Button Label** (HTML `button`): All
-- `section_03_button_label_02` — **Button Label** (HTML `button`): Projects
-- `section_03_button_label_03` — **Button Label** (HTML `button`): Process
-- `section_03_button_label_04` — **Button Label** (HTML `button`): Support
-- `section_03_button_label_05` — **Button Label** (HTML `button`): Do I need a finished brief?
-- `section_03_copy_03` — **Copy** (HTML `p`): No. A clear description of the challenge and desired outcome is enough for an initial conversation.
-- `section_03_button_label_06` — **Button Label** (HTML `button`): Can I share an existing website or prototype?
-- `section_03_copy_04` — **Copy** (HTML `p`): Yes. Include accessible links in your message so we can understand the current experience.
-- `section_03_button_label_07` — **Button Label** (HTML `button`): What if I am not sure which service I need?
-- `section_03_copy_05` — **Copy** (HTML `p`): Choose “Not sure yet”. We will help identify the problem before recommending a capability.
-- `section_03_copy_06` — **Copy** (HTML `p`): No matching questions found. Try another search or topic.
+Structured section fields:
+- `section_03_element_01` — **textarea** (p): Before you ask
+- `section_03_element_02` — **text** (h2): A few quick answers.
+- `section_03_element_03` — **textarea** (p): Search the essentials or filter by topic.
+- `section_03_element_04` — **wysiwyg** (label): Search frequently asked questions
+- `section_03_element_05` — **text** (button): All
+- `section_03_element_06` — **text** (button): Projects
+- `section_03_element_07` — **text** (button): Process
+- `section_03_element_08` — **text** (button): Support
+- `section_03_element_09` — **textarea** (p): No matching questions found. Try another search or topic.
+
+
+Faq group 01: 3 source items (div)
+- Faq repeater `section_03_faq_01_items` — add, remove, or reorder rows while the theme retains the source layout.
+  - `section_03_faq_01_items.element_01` — **text** (button): Do I need a finished brief?
+  - `section_03_faq_01_items.element_02` — **textarea** (p): No. A clear description of the challenge and desired outcome is enough for an initial conv
+  - `section_03_faq_01_items.attribute_data_category` — editable item filter/category value
 
 ## Shared implementation notes
 
-- Each top-level section is edited in one page-specific WYSIWYG field with Visual and Text tabs; the Text tab accepts HTML. The source section wrapper/layout remains theme-controlled.
+- Every section has separate fields for its headings, paragraphs, labels, and other text blocks; rich text blocks use individual WYSIWYG controls. The original wrappers and layout remain theme-controlled.
 - Link destinations and images/alt text have separate optional ACF overrides; leave them blank to retain the section HTML's original values.
-- Repeated cards, FAQ items, process steps, statistics, and testimonials are edited together in their containing section HTML so the current page design is preserved.
-- Form action/nonces, field names, required flags, choice values, and server validation remain theme-controlled; don't remove these form-control attributes while editing section HTML.
+- Repeated cards and homogeneous lists use ACF Repeaters with per-item content, link, and image/alt subfields; content and list wrappers remain in the source template.
+- Form controls and server validation remain theme-controlled; section wrappers and layout are not editor fields.

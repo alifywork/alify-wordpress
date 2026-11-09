@@ -2,7 +2,7 @@
 
 Source: [`frontend-source/useful-automation.html`](../../frontend-source/useful-automation.html)
 
-> This page has a coded ACF field group. Section editors support both visual text formatting and raw HTML; optional link URLs, image replacements, and image alternative text are separate controls. The inventory below documents the source defaults and element map used by the theme.
+> This page has structured fields for individual headings, paragraphs, labels, links, and images within each source section. Repeated cards and list items use template-matched ACF Repeater subfields where the source layout repeats; all other content uses separate template-specific fields.
 
 Shared header/footer navigation and global contact/social settings are configured once in Theme Settings; they are not repeated as page-specific fields.
 
@@ -29,12 +29,14 @@ Shared header/footer navigation and global contact/social settings are configure
 
 Section metadata: aria-label: `Article introduction`.
 
-- `section_01_link_label_01` — **Link Label** (HTML `a`): Back to the journal
-- `section_01_copy_01` — **Copy** (HTML `p`): The best automation opportunity is not always the most impressive workflow. It is often the repetitive coordination that prevents a capable team from spending time on more valuable work.
-- `section_01_inline_text_01` — **Inline Text** (HTML `span`): AI automation
-- `section_01_inline_text_02` — **Inline Text** (HTML `span`): 5 min read
-- `section_01_inline_text_03` — **Inline Text** (HTML `span`): By ALIFY Automation Team
-- `section_01_inline_text_04` — **Inline Text** (HTML `span`): 27 October 2026
+Structured section fields:
+- `section_01_element_01` — **text** (span): AI automation
+- `section_01_element_02` — **text** (span): 5 min read
+- `section_01_element_03` — **text** (span): By ALIFY Automation Team
+- `section_01_element_04` — **text** (span): 27 October 2026
+- `section_01_element_05` — **text** (a): Back to the journal
+- `section_01_element_06` — **textarea** (p): The best automation opportunity is not always the most impressive workflow. It is often th
+
 
 Link destinations:
 - `section_01_link_01_url` — Back to the journal → `blog.html`
@@ -47,41 +49,19 @@ Images/media:
 
 Section metadata: aria-label: `Article content`.
 
-- `section_02_copy_01` — **Copy** (HTML `p`): On this page
-- `section_02_link_label_01` — **Link Label** (HTML `a`): 01 Look for repeated coordination
-- `section_02_link_label_02` — **Link Label** (HTML `a`): 02 Separate rules from judgement
-- `section_02_link_label_03` — **Link Label** (HTML `a`): 03 Prototype the smallest complete workflow
-- `section_02_link_label_04` — **Link Label** (HTML `a`): 04 Measure time and quality together
-- `section_02_link_label_05` — **Link Label** (HTML `a`): Discuss your project
-- `section_02_heading_01` — **Heading** (HTML `h2`): Look for repeated coordination
-- `section_02_copy_02` — **Copy** (HTML `p`): Document the handoffs, copying, reminders, classification, and status checks that happen every day. These tasks often consume more collective attention than teams realise.
-- `section_02_copy_03` — **Copy** (HTML `p`): Map the trigger, the information involved, the decision, and the desired output before discussing tools.
-- `section_02_heading_02` — **Heading** (HTML `h2`): Separate rules from judgement
-- `section_02_copy_04` — **Copy** (HTML `p`): Stable, repeatable rules are strong automation candidates. Ambiguous decisions, sensitive communication, and exceptions may need a person to remain responsible.
-- `section_02_copy_05` — **Copy** (HTML `p`): A useful workflow makes that boundary explicit rather than treating human oversight as an afterthought.
-- `section_02_caption_01` — **Caption** (HTML `figcaption`): Visual framework A human-reviewed automation flow
-- `section_02_list_item_01` — **List Item** (HTML `li`): Structured trigger
-- `section_02_list_item_02` — **List Item** (HTML `li`): Assisted classification
-- `section_02_list_item_03` — **List Item** (HTML `li`): Human review
-- `section_02_list_item_04` — **List Item** (HTML `li`): Visible action
-- `section_02_copy_06` — **Copy** (HTML `p`): Exceptions and accountability remain explicit throughout the workflow.
-- `section_02_heading_03` — **Heading** (HTML `h2`): Prototype the smallest complete workflow
-- `section_02_copy_07` — **Copy** (HTML `p`): Test one real route from trigger to outcome. Include error states, missing information, ownership, and a visible record of what happened.
-- `section_02_copy_08` — **Copy** (HTML `p`): A narrow prototype exposes operational reality faster than a broad demonstration built around ideal data.
-- `section_02_heading_04` — **Heading** (HTML `h2`): Measure time and quality together
-- `section_02_copy_09` — **Copy** (HTML `p`): Time saved matters, but so do accuracy, visibility, response speed, and the effort required to maintain the workflow.
-- `section_02_copy_10` — **Copy** (HTML `p`): The goal is useful space for better work, not automation volume for its own sake.
-- `section_02_quote_01` — **Quote** (HTML `blockquote`): “Automate the repeatable coordination; keep responsibility and judgement clearly human.”
-- `section_02_copy_11` — **Copy** (HTML `p`): Key takeaways
-- `section_02_heading_05` — **Heading** (HTML `h2`): Keep these four points.
-- `section_02_list_item_05` — **List Item** (HTML `li`): Start with repetitive coordination, not a tool.
-- `section_02_list_item_06` — **List Item** (HTML `li`): Keep judgement and accountability visible.
-- `section_02_list_item_07` — **List Item** (HTML `li`): Prototype one complete workflow with exceptions.
-- `section_02_list_item_08` — **List Item** (HTML `li`): Measure quality alongside time saved.
-- `section_02_inline_text_01` — **Inline Text** (HTML `span`): 01
-- `section_02_inline_text_02` — **Inline Text** (HTML `span`): 02
-- `section_02_inline_text_03` — **Inline Text** (HTML `span`): 03
-- `section_02_inline_text_04` — **Inline Text** (HTML `span`): 04
+Structured section fields:
+- `section_02_element_01` — **textarea** (p): On this page
+- `section_02_element_02` — **wysiwyg** (a): 01 Look for repeated coordination
+- `section_02_element_03` — **wysiwyg** (a): 02 Separate rules from judgement
+- `section_02_element_04` — **wysiwyg** (a): 03 Prototype the smallest complete workflow
+- `section_02_element_05` — **wysiwyg** (a): 04 Measure time and quality together
+- `section_02_element_06` — **text** (a): Discuss your project
+- `section_02_element_07` — **wysiwyg** (figcaption): Visual framework A human-reviewed automation flow
+- `section_02_element_08` — **textarea** (p): Exceptions and accountability remain explicit throughout the workflow.
+- `section_02_element_09` — **wysiwyg** (blockquote): “Automate the repeatable coordination; keep responsibility and judgement clearly human.”
+- `section_02_element_10` — **textarea** (p): Key takeaways
+- `section_02_element_11` — **text** (h2): Keep these four points.
+
 
 Link destinations:
 - `section_02_link_01_url` — 01 Look for repeated coordination → `#article-point-1`
@@ -90,14 +70,24 @@ Link destinations:
 - `section_02_link_04_url` — 04 Measure time and quality together → `#article-point-4`
 - `section_02_link_05_url` — Discuss your project → `start-project.html`
 
-Repeated content: 4 `<article>` item(s) detected. Implement as an ACF Repeater/Flexible Content layout where editors need to add, remove, or reorder items; expose each item's heading, copy, image/alt, link label, and link URL as subfields when present.
+Repeater `section_02_cards` — 4 starter rows; each row has individual content, link URL, and image/alt subfields. Add, remove, or reorder rows in ACF.
+
+List group 01: 4 source items (li)
+- List repeater `section_02_list_01_items` — add, remove, or reorder rows while the theme retains the source layout.
+  - `section_02_list_01_items.element_01` — **textarea** (li): Structured trigger
+
+List group 02: 4 source items (li)
+- List repeater `section_02_list_02_items` — add, remove, or reorder rows while the theme retains the source layout.
+  - `section_02_list_02_items.element_01` — **textarea** (li): Start with repetitive coordination, not a tool.
 
 ### 03. More journal articles
 
 Section metadata: aria-label: `More journal articles`.
 
-- `section_03_link_label_01` — **Link Label** (HTML `a`): Previous article A practical guide to planning a website that can grow.
-- `section_03_link_label_02` — **Link Label** (HTML `a`): Next article Technical SEO is experience design too.
+Structured section fields:
+- `section_03_element_01` — **wysiwyg** (a): Previous article A practical guide to planning a website that can grow.
+- `section_03_element_02` — **wysiwyg** (a): Next article Technical SEO is experience design too.
+
 
 Link destinations:
 - `section_03_link_01_url` — Previous article A practical guide to planning a website that can grow. → `planning-scalable-website.html`
@@ -107,11 +97,13 @@ Link destinations:
 
 Section metadata: aria-label: `Related articles`.
 
-- `section_04_copy_01` — **Copy** (HTML `p`): Continue reading
-- `section_04_heading_01` — **Heading** (HTML `h2`): Related perspectives.
-- `section_04_copy_02` — **Copy** (HTML `p`): Explore another connected discipline.
-- `section_04_link_label_01` — **Link Label** (HTML `a`): Web development A practical guide to planning a website that can grow. Read next
-- `section_04_link_label_02` — **Link Label** (HTML `a`): SEO Technical SEO is experience design too. Read next
+Structured section fields:
+- `section_04_element_01` — **textarea** (p): Continue reading
+- `section_04_element_02` — **text** (h2): Related perspectives.
+- `section_04_element_03` — **textarea** (p): Explore another connected discipline.
+- `section_04_element_04` — **wysiwyg** (a): Web development A practical guide to planning a website that can grow. Read next
+- `section_04_element_05` — **wysiwyg** (a): SEO Technical SEO is experience design too. Read next
+
 
 Link destinations:
 - `section_04_link_01_url` — Web development A practical guide to planning a website that can grow. Read next → `planning-scalable-website.html`
@@ -125,7 +117,7 @@ Images/media:
 
 ## Shared implementation notes
 
-- Each top-level section is edited in one page-specific WYSIWYG field with Visual and Text tabs; the Text tab accepts HTML. The source section wrapper/layout remains theme-controlled.
+- Every section has separate fields for its headings, paragraphs, labels, and other text blocks; rich text blocks use individual WYSIWYG controls. The original wrappers and layout remain theme-controlled.
 - Link destinations and images/alt text have separate optional ACF overrides; leave them blank to retain the section HTML's original values.
-- Repeated cards, FAQ items, process steps, statistics, and testimonials are edited together in their containing section HTML so the current page design is preserved.
-- Form action/nonces, field names, required flags, choice values, and server validation remain theme-controlled; don't remove these form-control attributes while editing section HTML.
+- Repeated cards and homogeneous lists use ACF Repeaters with per-item content, link, and image/alt subfields; content and list wrappers remain in the source template.
+- Form controls and server validation remain theme-controlled; section wrappers and layout are not editor fields.

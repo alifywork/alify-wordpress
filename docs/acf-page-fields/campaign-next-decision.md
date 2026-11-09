@@ -2,7 +2,7 @@
 
 Source: [`frontend-source/campaign-next-decision.html`](../../frontend-source/campaign-next-decision.html)
 
-> This page has a coded ACF field group. Section editors support both visual text formatting and raw HTML; optional link URLs, image replacements, and image alternative text are separate controls. The inventory below documents the source defaults and element map used by the theme.
+> This page has structured fields for individual headings, paragraphs, labels, links, and images within each source section. Repeated cards and list items use template-matched ACF Repeater subfields where the source layout repeats; all other content uses separate template-specific fields.
 
 Shared header/footer navigation and global contact/social settings are configured once in Theme Settings; they are not repeated as page-specific fields.
 
@@ -29,12 +29,14 @@ Shared header/footer navigation and global contact/social settings are configure
 
 Section metadata: aria-label: `Article introduction`.
 
-- `section_01_link_label_01` — **Link Label** (HTML `a`): Back to the journal
-- `section_01_copy_01` — **Copy** (HTML `p`): A campaign becomes more coherent when every element supports the same next decision. Channel, creative, landing page, and measurement should feel like parts of one journey rather than separate deliverables.
-- `section_01_inline_text_01` — **Inline Text** (HTML `span`): Digital marketing
-- `section_01_inline_text_02` — **Inline Text** (HTML `span`): 5 min read
-- `section_01_inline_text_03` — **Inline Text** (HTML `span`): By ALIFY Campaign Team
-- `section_01_inline_text_04` — **Inline Text** (HTML `span`): 20 October 2026
+Structured section fields:
+- `section_01_element_01` — **text** (span): Digital marketing
+- `section_01_element_02` — **text** (span): 5 min read
+- `section_01_element_03` — **text** (span): By ALIFY Campaign Team
+- `section_01_element_04` — **text** (span): 20 October 2026
+- `section_01_element_05` — **text** (a): Back to the journal
+- `section_01_element_06` — **textarea** (p): A campaign becomes more coherent when every element supports the same next decision. Chann
+
 
 Link destinations:
 - `section_01_link_01_url` — Back to the journal → `blog.html`
@@ -47,41 +49,19 @@ Images/media:
 
 Section metadata: aria-label: `Article content`.
 
-- `section_02_copy_01` — **Copy** (HTML `p`): On this page
-- `section_02_link_label_01` — **Link Label** (HTML `a`): 01 Define the audience moment
-- `section_02_link_label_02` — **Link Label** (HTML `a`): 02 Make one promise consistently
-- `section_02_link_label_03` — **Link Label** (HTML `a`): 03 Design the destination before launch
-- `section_02_link_label_04` — **Link Label** (HTML `a`): 04 Measure decisions, not activity alone
-- `section_02_link_label_05` — **Link Label** (HTML `a`): Discuss your project
-- `section_02_heading_01` — **Heading** (HTML `h2`): Define the audience moment
-- `section_02_copy_02` — **Copy** (HTML `p`): Understand what the audience already knows, what they are trying to solve, and what would make the message relevant now.
-- `section_02_copy_03` — **Copy** (HTML `p`): The same product may require different stories for first discovery, active comparison, and returning consideration.
-- `section_02_heading_02` — **Heading** (HTML `h2`): Make one promise consistently
-- `section_02_copy_04` — **Copy** (HTML `p`): The campaign idea should establish a clear promise that the destination immediately continues. A disconnect between ad and landing page creates avoidable doubt.
-- `section_02_copy_05` — **Copy** (HTML `p`): Consistency does not mean repeating identical copy; it means preserving the same meaning and expectation.
-- `section_02_caption_01` — **Caption** (HTML `figcaption`): Visual framework One continuous campaign journey
-- `section_02_list_item_01` — **List Item** (HTML `li`): Audience moment
-- `section_02_list_item_02` — **List Item** (HTML `li`): Creative promise
-- `section_02_list_item_03` — **List Item** (HTML `li`): Landing reassurance
-- `section_02_list_item_04` — **List Item** (HTML `li`): Next decision
-- `section_02_copy_06` — **Copy** (HTML `p`): Measurement connects the destination back to the original audience intent.
-- `section_02_heading_03` — **Heading** (HTML `h2`): Design the destination before launch
-- `section_02_copy_07` — **Copy** (HTML `p`): The landing experience needs to answer the questions created by the campaign and provide a next step suited to the visitor’s readiness.
-- `section_02_copy_08` — **Copy** (HTML `p`): Campaign planning should include content, design, development, tracking, and quality assurance together.
-- `section_02_heading_04` — **Heading** (HTML `h2`): Measure decisions, not activity alone
-- `section_02_copy_09` — **Copy** (HTML `p`): Clicks and impressions describe distribution. Qualified inquiries, signup quality, and progression through the journey reveal whether the campaign created useful action.
-- `section_02_copy_10` — **Copy** (HTML `p`): Use those signals to refine the story and experience, not only the media budget.
-- `section_02_quote_01` — **Quote** (HTML `blockquote`): “A campaign works when the promise, destination, and next decision feel like one continuous thought.”
-- `section_02_copy_11` — **Copy** (HTML `p`): Key takeaways
-- `section_02_heading_05` — **Heading** (HTML `h2`): Keep these four points.
-- `section_02_list_item_05` — **List Item** (HTML `li`): Start with audience context and readiness.
-- `section_02_list_item_06` — **List Item** (HTML `li`): Keep one promise from creative to destination.
-- `section_02_list_item_07` — **List Item** (HTML `li`): Build the landing journey before launch.
-- `section_02_list_item_08` — **List Item** (HTML `li`): Measure useful decisions, not just channel activity.
-- `section_02_inline_text_01` — **Inline Text** (HTML `span`): 01
-- `section_02_inline_text_02` — **Inline Text** (HTML `span`): 02
-- `section_02_inline_text_03` — **Inline Text** (HTML `span`): 03
-- `section_02_inline_text_04` — **Inline Text** (HTML `span`): 04
+Structured section fields:
+- `section_02_element_01` — **textarea** (p): On this page
+- `section_02_element_02` — **wysiwyg** (a): 01 Define the audience moment
+- `section_02_element_03` — **wysiwyg** (a): 02 Make one promise consistently
+- `section_02_element_04` — **wysiwyg** (a): 03 Design the destination before launch
+- `section_02_element_05` — **wysiwyg** (a): 04 Measure decisions, not activity alone
+- `section_02_element_06` — **text** (a): Discuss your project
+- `section_02_element_07` — **wysiwyg** (figcaption): Visual framework One continuous campaign journey
+- `section_02_element_08` — **textarea** (p): Measurement connects the destination back to the original audience intent.
+- `section_02_element_09` — **wysiwyg** (blockquote): “A campaign works when the promise, destination, and next decision feel like one continuou
+- `section_02_element_10` — **textarea** (p): Key takeaways
+- `section_02_element_11` — **text** (h2): Keep these four points.
+
 
 Link destinations:
 - `section_02_link_01_url` — 01 Define the audience moment → `#article-point-1`
@@ -90,14 +70,24 @@ Link destinations:
 - `section_02_link_04_url` — 04 Measure decisions, not activity alone → `#article-point-4`
 - `section_02_link_05_url` — Discuss your project → `start-project.html`
 
-Repeated content: 4 `<article>` item(s) detected. Implement as an ACF Repeater/Flexible Content layout where editors need to add, remove, or reorder items; expose each item's heading, copy, image/alt, link label, and link URL as subfields when present.
+Repeater `section_02_cards` — 4 starter rows; each row has individual content, link URL, and image/alt subfields. Add, remove, or reorder rows in ACF.
+
+List group 01: 4 source items (li)
+- List repeater `section_02_list_01_items` — add, remove, or reorder rows while the theme retains the source layout.
+  - `section_02_list_01_items.element_01` — **textarea** (li): Audience moment
+
+List group 02: 4 source items (li)
+- List repeater `section_02_list_02_items` — add, remove, or reorder rows while the theme retains the source layout.
+  - `section_02_list_02_items.element_01` — **textarea** (li): Start with audience context and readiness.
 
 ### 03. More journal articles
 
 Section metadata: aria-label: `More journal articles`.
 
-- `section_03_link_label_01` — **Link Label** (HTML `a`): Previous article Technical SEO is experience design too.
-- `section_03_link_label_02` — **Link Label** (HTML `a`): Next article A brand identity should work before it impresses.
+Structured section fields:
+- `section_03_element_01` — **wysiwyg** (a): Previous article Technical SEO is experience design too.
+- `section_03_element_02` — **wysiwyg** (a): Next article A brand identity should work before it impresses.
+
 
 Link destinations:
 - `section_03_link_01_url` — Previous article Technical SEO is experience design too. → `technical-seo-experience.html`
@@ -107,11 +97,13 @@ Link destinations:
 
 Section metadata: aria-label: `Related articles`.
 
-- `section_04_copy_01` — **Copy** (HTML `p`): Continue reading
-- `section_04_heading_01` — **Heading** (HTML `h2`): Related perspectives.
-- `section_04_copy_02` — **Copy** (HTML `p`): Explore another connected discipline.
-- `section_04_link_label_01` — **Link Label** (HTML `a`): SEO Technical SEO is experience design too. Read next
-- `section_04_link_label_02` — **Link Label** (HTML `a`): Experience design Why clarity is a conversion strategy. Read next
+Structured section fields:
+- `section_04_element_01` — **textarea** (p): Continue reading
+- `section_04_element_02` — **text** (h2): Related perspectives.
+- `section_04_element_03` — **textarea** (p): Explore another connected discipline.
+- `section_04_element_04` — **wysiwyg** (a): SEO Technical SEO is experience design too. Read next
+- `section_04_element_05` — **wysiwyg** (a): Experience design Why clarity is a conversion strategy. Read next
+
 
 Link destinations:
 - `section_04_link_01_url` — SEO Technical SEO is experience design too. Read next → `technical-seo-experience.html`
@@ -125,7 +117,7 @@ Images/media:
 
 ## Shared implementation notes
 
-- Each top-level section is edited in one page-specific WYSIWYG field with Visual and Text tabs; the Text tab accepts HTML. The source section wrapper/layout remains theme-controlled.
+- Every section has separate fields for its headings, paragraphs, labels, and other text blocks; rich text blocks use individual WYSIWYG controls. The original wrappers and layout remain theme-controlled.
 - Link destinations and images/alt text have separate optional ACF overrides; leave them blank to retain the section HTML's original values.
-- Repeated cards, FAQ items, process steps, statistics, and testimonials are edited together in their containing section HTML so the current page design is preserved.
-- Form action/nonces, field names, required flags, choice values, and server validation remain theme-controlled; don't remove these form-control attributes while editing section HTML.
+- Repeated cards and homogeneous lists use ACF Repeaters with per-item content, link, and image/alt subfields; content and list wrappers remain in the source template.
+- Form controls and server validation remain theme-controlled; section wrappers and layout are not editor fields.

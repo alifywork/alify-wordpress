@@ -714,7 +714,8 @@ function alify_render_source_view( $slug ) {
 			return true;
 		}
 	}
-	if ( is_singular() && alify_render_acf_page_builder() ) {
+	$source_template_managed = is_singular() && function_exists( 'alify_is_source_template_managed' ) && alify_is_source_template_managed( get_queried_object_id() );
+	if ( is_singular() && ! $source_template_managed && alify_render_acf_page_builder() ) {
 		return true;
 	}
 	if ( is_singular() ) {
@@ -783,6 +784,33 @@ function alify_render_source_view( $slug ) {
 			$background = get_field( 'hero_background', $post_id, false );
 			if ( $background && preg_match( '/^neon-lines-(?:0[1-9]|1[0-4])\\.webp$/', $background ) ) {
 				$markup = preg_replace( '~(assets/images/background/)neon-lines-(?:0[1-9]|1[0-4])\\.webp~', '$1' . $background, $markup, 1 );
+			}
+		}
+	}
+	if ( ! is_singular() && function_exists( 'get_field' ) && function_exists( 'alify_get_acf_archive_page_slugs' ) && in_array( $slug, alify_get_acf_archive_page_slugs(), true ) ) {
+		$archive_prefix = 'alify_archive_' . sanitize_key( $slug ) . '_hero_';
+		foreach ( array( 'eyebrow', 'title', 'description' ) as $attribute ) {
+			$value = get_field( $archive_prefix . $attribute . '_html', 'option', false );
+			if ( ! is_string( $value ) || '' === trim( $value ) ) {
+				continue;
+			}
+			$plain_value = wp_strip_all_tags( $value );
+			$markup = preg_replace_callback( '~<page-hero\\b[^>]*>~i', function ( $matches ) use ( $attribute, $plain_value ) {
+				return function_exists( 'alify_set_html_attribute' ) ? alify_set_html_attribute( $matches[0], $attribute, $plain_value ) : $matches[0];
+			}, $markup, 1 );
+			if ( function_exists( 'alify_sanitize_page_inline_html' ) && function_exists( 'alify_set_html_attribute' ) ) {
+				$html_value = alify_sanitize_page_inline_html( $value );
+				$markup = preg_replace_callback( '~<page-hero\\b[^>]*>~i', function ( $matches ) use ( $attribute, $html_value ) {
+					return alify_set_html_attribute( $matches[0], $attribute . '-html', $html_value );
+				}, $markup, 1 );
+			}
+		}
+		foreach ( array( 'background', 'variant' ) as $attribute ) {
+			$value = get_field( $archive_prefix . $attribute, 'option', false );
+			if ( is_string( $value ) && '' !== trim( $value ) ) {
+				$markup = preg_replace_callback( '~<page-hero\\b[^>]*>~i', function ( $matches ) use ( $attribute, $value ) {
+					return function_exists( 'alify_set_html_attribute' ) ? alify_set_html_attribute( $matches[0], $attribute, $value ) : $matches[0];
+				}, $markup, 1 );
 			}
 		}
 	}
@@ -891,6 +919,10 @@ function alify_current_source_view( $fallback = '' ) {
 		}
 		if ( is_readable( ALIFY_THEME_DIR . '/template-parts/source-pages/' . $slug . '.php' ) ) {
 			return $slug;
+		}
+		$single_views = array( 'post' => 'blog-single', 'service' => 'service-single', 'work' => 'project-single', 'case_study' => 'case-study-single', 'industry' => 'industry-single' );
+		if ( isset( $single_views[ $object->post_type ] ) && is_readable( ALIFY_THEME_DIR . '/template-parts/source-pages/' . $single_views[ $object->post_type ] . '.php' ) ) {
+			return $single_views[ $object->post_type ];
 		}
 	}
 	return $fallback;

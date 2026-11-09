@@ -2,7 +2,7 @@
 
 Source: [`frontend-source/healthcare.html`](../../frontend-source/healthcare.html)
 
-> This page has a coded ACF field group. Section editors support both visual text formatting and raw HTML; optional link URLs, image replacements, and image alternative text are separate controls. The inventory below documents the source defaults and element map used by the theme.
+> This page has structured fields for individual headings, paragraphs, labels, links, and images within each source section. Repeated cards and list items use template-matched ACF Repeater subfields where the source layout repeats; all other content uses separate template-specific fields.
 
 Shared header/footer navigation and global contact/social settings are configured once in Theme Settings; they are not repeated as page-specific fields.
 
@@ -29,10 +29,12 @@ Shared header/footer navigation and global contact/social settings are configure
 
 Section metadata: aria-label: `Healthcare overview`; id: `healthcare`.
 
-- `section_01_copy_01` — **Copy** (HTML `p`): Healthcare
-- `section_01_heading_01` — **Heading** (HTML `h2`): Make important information approachable.
-- `section_01_copy_02` — **Copy** (HTML `p`): Healthcare experiences need calm, accessible communication and a careful respect for privacy, trust, and different user needs.
-- `section_01_link_label_01` — **Link Label** (HTML `a`): Discuss your brief
+Structured section fields:
+- `section_01_element_01` — **textarea** (p): Healthcare
+- `section_01_element_02` — **text** (h2): Make important information approachable.
+- `section_01_element_03` — **textarea** (p): Healthcare experiences need calm, accessible communication and a careful respect for priva
+- `section_01_element_04` — **text** (a): Discuss your brief
+
 
 Link destinations:
 - `section_01_link_01_url` — Discuss your brief → `start-project.html`
@@ -45,94 +47,82 @@ Images/media:
 
 Section metadata: aria-label: `Industry challenge`.
 
-- `section_02_copy_01` — **Copy** (HTML `p`): The context
-- `section_02_heading_01` — **Heading** (HTML `h2`): Important information often arrives at a stressful moment.
-- `section_02_copy_02` — **Copy** (HTML `p`): People may be anxious, unfamiliar with terminology, or navigating care for someone else. Clarity and accessibility are essential.
-- `section_02_list_item_01` — **List Item** (HTML `li`): Calm content that avoids unnecessary complexity
-- `section_02_list_item_02` — **List Item** (HTML `li`): Accessible journeys for different abilities and contexts
-- `section_02_list_item_03` — **List Item** (HTML `li`): Privacy-conscious routes to information and inquiry
+Structured section fields:
+- `section_02_element_01` — **textarea** (p): The context
+- `section_02_element_02` — **text** (h2): Important information often arrives at a stressful moment.
+- `section_02_element_03` — **textarea** (p): People may be anxious, unfamiliar with terminology, or navigating care for someone else. C
+
+
+List group 01: 3 source items (li)
+- List repeater `section_02_list_01_items` — add, remove, or reorder rows while the theme retains the source layout.
+  - `section_02_list_01_items.element_01` — **textarea** (li): Calm content that avoids unnecessary complexity
 
 ### 03. Where we can help
 
 Section metadata: aria-label: `Where we can help`.
 
-- `section_03_copy_01` — **Copy** (HTML `p`): Where we can help
-- `section_03_heading_01` — **Heading** (HTML `h2`): Connected capabilities. One clear direction.
-- `section_03_copy_02` — **Copy** (HTML `p`): A focused engagement or a connected team across strategy, design, content, and technology.
-- `section_03_heading_02` — **Heading** (HTML `h3`): Accessible service information
-- `section_03_copy_03` — **Copy** (HTML `p`): Organise services, conditions, locations, and practical detail around understandable user questions.
-- `section_03_heading_03` — **Heading** (HTML `h3`): Patient-focused journeys
-- `section_03_copy_04` — **Copy** (HTML `p`): Design routes to appointments, preparation, support, and follow-up information with empathy and clarity.
-- `section_03_heading_04` — **Heading** (HTML `h3`): Content structure and clarity
-- `section_03_copy_05` — **Copy** (HTML `p`): Work with subject-matter experts to make approved information easier to find, scan, and understand.
-- `section_03_heading_05` — **Heading** (HTML `h3`): Privacy-conscious inquiry flows
-- `section_03_copy_06` — **Copy** (HTML `p`): Shape forms and interactions carefully, with clear expectations and minimal unnecessary data collection.
-- `section_03_inline_text_01` — **Inline Text** (HTML `span`): 01
-- `section_03_inline_text_02` — **Inline Text** (HTML `span`): 02
-- `section_03_inline_text_03` — **Inline Text** (HTML `span`): 03
-- `section_03_inline_text_04` — **Inline Text** (HTML `span`): 04
+Structured section fields:
+- `section_03_element_01` — **textarea** (p): Where we can help
+- `section_03_element_02` — **wysiwyg** (h2): Connected capabilities. One clear direction.
+- `section_03_element_03` — **textarea** (p): A focused engagement or a connected team across strategy, design, content, and technology.
 
-Repeated content: 4 `<article>` item(s) detected. Implement as an ACF Repeater/Flexible Content layout where editors need to add, remove, or reorder items; expose each item's heading, copy, image/alt, link label, and link URL as subfields when present.
+
+Repeater `section_03_cards` — 4 starter rows; each row has individual content, link URL, and image/alt subfields. Add, remove, or reorder rows in ACF.
 
 ### 04. Industry in practice
 
 Section metadata: aria-label: `Industry in practice`.
 
-- `section_04_copy_01` — **Copy** (HTML `p`): Practical artefact
-- `section_04_heading_01` — **Heading** (HTML `h3`): From a sensitive question to accessible support.
-- `section_04_list_item_01` — **List Item** (HTML `li`): Understand
-- `section_04_list_item_02` — **List Item** (HTML `li`): Reassure
-- `section_04_list_item_03` — **List Item** (HTML `li`): Guide
-- `section_04_list_item_04` — **List Item** (HTML `li`): Connect
-- `section_04_link_label_01` — **Link Label** (HTML `a`): View the wellness project
-- `section_04_copy_02` — **Copy** (HTML `p`): What the work includes
-- `section_04_heading_02` — **Heading** (HTML `h2`): Content, review, and interaction patterns help people understand their options without unnecessary stress or data collection.
-- `section_04_list_item_05` — **List Item** (HTML `li`): Patient questions and content review
-- `section_04_list_item_06` — **List Item** (HTML `li`): Accessible service and appointment journeys
-- `section_04_list_item_07` — **List Item** (HTML `li`): Privacy-conscious inquiry patterns
-- `section_04_term_01` — **Term** (HTML `dt`): Timeline
-- `section_04_definition_01` — **Definition** (HTML `dd`): Defined around scope and dependencies
-- `section_04_term_02` — **Term** (HTML `dt`): Engagement
-- `section_04_definition_02` — **Definition** (HTML `dd`): Focused project or connected partnership
-- `section_04_term_03` — **Term** (HTML `dt`): First input
-- `section_04_definition_03` — **Definition** (HTML `dd`): Your goal, audience, constraints, and current context
+Structured section fields:
+- `section_04_element_01` — **textarea** (p): Practical artefact
+- `section_04_element_02` — **text** (h3): From a sensitive question to accessible support.
+- `section_04_element_03` — **text** (a): View the wellness project
+- `section_04_element_04` — **textarea** (p): What the work includes
+- `section_04_element_05` — **text** (h2): Content, review, and interaction patterns help people understand their options without unn
+- `section_04_element_06` — **text** (dt): Timeline
+- `section_04_element_07` — **textarea** (dd): Defined around scope and dependencies
+- `section_04_element_08` — **text** (dt): Engagement
+- `section_04_element_09` — **textarea** (dd): Focused project or connected partnership
+- `section_04_element_10` — **text** (dt): First input
+- `section_04_element_11` — **textarea** (dd): Your goal, audience, constraints, and current context
+
 
 Link destinations:
 - `section_04_link_01_url` — View the wellness project → `wellness-project.html`
+
+List group 01: 4 source items (li)
+- List repeater `section_04_list_01_items` — add, remove, or reorder rows while the theme retains the source layout.
+  - `section_04_list_01_items.element_01` — **textarea** (li): Understand
+
+List group 02: 3 source items (li)
+- List repeater `section_04_list_02_items` — add, remove, or reorder rows while the theme retains the source layout.
+  - `section_04_list_02_items.element_01` — **textarea** (li): Patient questions and content review
 
 ### 05. Engagement approach
 
 Section metadata: aria-label: `Engagement approach`.
 
-- `section_05_copy_01` — **Copy** (HTML `p`): A practical engagement
-- `section_05_heading_01` — **Heading** (HTML `h2`): From sector context to useful experience.
-- `section_05_copy_02` — **Copy** (HTML `p`): Clear responsibilities and review points keep the work connected to your reality.
-- `section_05_heading_02` — **Heading** (HTML `h3`): Listen to patients and subject experts
-- `section_05_copy_03` — **Copy** (HTML `p`): A focused working session establishes the audience, commercial priorities, constraints, and available knowledge.
-- `section_05_heading_03` — **Heading** (HTML `h3`): Map information and accessibility needs
-- `section_05_copy_04` — **Copy** (HTML `p`): We identify the important questions, decision points, and friction that the experience needs to address.
-- `section_05_heading_04` — **Heading** (HTML `h3`): Design calm, respectful journeys
-- `section_05_copy_05` — **Copy** (HTML `p`): Strategy, content, interface, and interaction come together in a coherent direction.
-- `section_05_heading_05` — **Heading** (HTML `h3`): Review, build, and validate carefully
-- `section_05_copy_06` — **Copy** (HTML `p`): The experience is implemented and reviewed with the relevant stakeholders and real content.
-- `section_05_inline_text_01` — **Inline Text** (HTML `span`): 01
-- `section_05_inline_text_02` — **Inline Text** (HTML `span`): 02
-- `section_05_inline_text_03` — **Inline Text** (HTML `span`): 03
-- `section_05_inline_text_04` — **Inline Text** (HTML `span`): 04
+Structured section fields:
+- `section_05_element_01` — **textarea** (p): A practical engagement
+- `section_05_element_02` — **wysiwyg** (h2): From sector context to useful experience.
+- `section_05_element_03` — **textarea** (p): Clear responsibilities and review points keep the work connected to your reality.
 
-Repeated content: 4 `<article>` item(s) detected. Implement as an ACF Repeater/Flexible Content layout where editors need to add, remove, or reorder items; expose each item's heading, copy, image/alt, link label, and link URL as subfields when present.
+
+Repeater `section_05_cards` — 4 starter rows; each row has individual content, link URL, and image/alt subfields. Add, remove, or reorder rows in ACF.
 
 ### 06. Other industries
 
 Section metadata: aria-label: `Other industries`.
 
-- `section_06_copy_01` — **Copy** (HTML `p`): Other industries
-- `section_06_heading_01` — **Heading** (HTML `h2`): Explore another context.
-- `section_06_copy_02` — **Copy** (HTML `p`): The approach adapts around different audiences, journeys, and business models.
-- `section_06_link_label_01` — **Link Label** (HTML `a`): SaaS & Technology
-- `section_06_link_label_02` — **Link Label** (HTML `a`): E-commerce
-- `section_06_link_label_03` — **Link Label** (HTML `a`): Real Estate
-- `section_06_link_label_04` — **Link Label** (HTML `a`): Startups
+Structured section fields:
+- `section_06_element_01` — **textarea** (p): Other industries
+- `section_06_element_02` — **text** (h2): Explore another context.
+- `section_06_element_03` — **textarea** (p): The approach adapts around different audiences, journeys, and business models.
+- `section_06_element_04` — **wysiwyg** (a): SaaS & Technology
+- `section_06_element_05` — **wysiwyg** (a): E-commerce
+- `section_06_element_06` — **wysiwyg** (a): Real Estate
+- `section_06_element_07` — **wysiwyg** (a): Startups
+
 
 Link destinations:
 - `section_06_link_01_url` — SaaS & Technology → `industry-single.html`
@@ -146,25 +136,27 @@ Section metadata: aria-label: `Industry questions`.
 
 Interaction/filter data: `data-faq-filter` = `all`; `data-faq-filter` = `projects`; `data-faq-filter` = `process`; `data-faq-filter` = `support`; `data-category` = `projects`; `data-category` = `process`; `data-category` = `support`.
 
-- `section_07_copy_01` — **Copy** (HTML `p`): Industry questions
-- `section_07_heading_01` — **Heading** (HTML `h2`): Planning around your context.
-- `section_07_copy_02` — **Copy** (HTML `p`): Search the essentials or filter by topic.
-- `section_07_field_label_01` — **Field Label** (HTML `label`): Search frequently asked questions
-- `section_07_button_label_01` — **Button Label** (HTML `button`): All
-- `section_07_button_label_02` — **Button Label** (HTML `button`): Projects
-- `section_07_button_label_03` — **Button Label** (HTML `button`): Process
-- `section_07_button_label_04` — **Button Label** (HTML `button`): Support
-- `section_07_button_label_05` — **Button Label** (HTML `button`): Can you collaborate with clinical reviewers?
-- `section_07_copy_03` — **Copy** (HTML `p`): Yes. Their review is essential for accurate content and responsible communication throughout the design process.
-- `section_07_button_label_06` — **Button Label** (HTML `button`): How do you approach accessibility?
-- `section_07_copy_04` — **Copy** (HTML `p`): Accessibility informs content, visual design, interaction, development, and testing rather than being treated as a final check.
-- `section_07_button_label_07` — **Button Label** (HTML `button`): Can you improve an existing healthcare website?
-- `section_07_copy_05` — **Copy** (HTML `p`): Yes. We can focus on specific information, accessibility, navigation, or journey problems without requiring a complete rebuild.
-- `section_07_copy_06` — **Copy** (HTML `p`): No matching questions found. Try another search or topic.
+Structured section fields:
+- `section_07_element_01` — **textarea** (p): Industry questions
+- `section_07_element_02` — **text** (h2): Planning around your context.
+- `section_07_element_03` — **textarea** (p): Search the essentials or filter by topic.
+- `section_07_element_04` — **wysiwyg** (label): Search frequently asked questions
+- `section_07_element_05` — **text** (button): All
+- `section_07_element_06` — **text** (button): Projects
+- `section_07_element_07` — **text** (button): Process
+- `section_07_element_08` — **text** (button): Support
+- `section_07_element_09` — **textarea** (p): No matching questions found. Try another search or topic.
+
+
+Faq group 01: 3 source items (div)
+- Faq repeater `section_07_faq_01_items` — add, remove, or reorder rows while the theme retains the source layout.
+  - `section_07_faq_01_items.element_01` — **text** (button): Can you collaborate with clinical reviewers?
+  - `section_07_faq_01_items.element_02` — **textarea** (p): Yes. Their review is essential for accurate content and responsible communication througho
+  - `section_07_faq_01_items.attribute_data_category` — editable item filter/category value
 
 ## Shared implementation notes
 
-- Each top-level section is edited in one page-specific WYSIWYG field with Visual and Text tabs; the Text tab accepts HTML. The source section wrapper/layout remains theme-controlled.
+- Every section has separate fields for its headings, paragraphs, labels, and other text blocks; rich text blocks use individual WYSIWYG controls. The original wrappers and layout remain theme-controlled.
 - Link destinations and images/alt text have separate optional ACF overrides; leave them blank to retain the section HTML's original values.
-- Repeated cards, FAQ items, process steps, statistics, and testimonials are edited together in their containing section HTML so the current page design is preserved.
-- Form action/nonces, field names, required flags, choice values, and server validation remain theme-controlled; don't remove these form-control attributes while editing section HTML.
+- Repeated cards and homogeneous lists use ACF Repeaters with per-item content, link, and image/alt subfields; content and list wrappers remain in the source template.
+- Form controls and server validation remain theme-controlled; section wrappers and layout are not editor fields.

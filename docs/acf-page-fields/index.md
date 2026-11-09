@@ -2,7 +2,7 @@
 
 Source: [`frontend-source/index.html`](../../frontend-source/index.html)
 
-> This page has a coded ACF field group. Section editors support both visual text formatting and raw HTML; optional link URLs, image replacements, and image alternative text are separate controls. The inventory below documents the source defaults and element map used by the theme.
+> This page has structured fields for individual headings, paragraphs, labels, links, and images within each source section. Repeated cards and list items use template-matched ACF Repeater subfields where the source layout repeats; all other content uses separate template-specific fields.
 
 Shared header/footer navigation and global contact/social settings are configured once in Theme Settings; they are not repeated as page-specific fields.
 
@@ -26,11 +26,13 @@ Shared header/footer navigation and global contact/social settings are configure
 
 ### 01. Section 01
 
-- `section_01_copy_01` — **Copy** (HTML `p`): Independent digital studio
-- `section_01_heading_01` — **Heading** (HTML `h1`): Digital experiences that move brands forward.
-- `section_01_copy_02` — **Copy** (HTML `p`): We unite strategy, thoughtful design, and creative technology to build meaningful digital experiences for ambitious brands.
-- `section_01_link_label_01` — **Link Label** (HTML `a`): Start a project
-- `section_01_link_label_02` — **Link Label** (HTML `a`): View case studies
+Structured section fields:
+- `section_01_element_01` — **textarea** (p): Independent digital studio
+- `section_01_element_02` — **text** (h1): Digital experiences that move brands forward.
+- `section_01_element_03` — **textarea** (p): We unite strategy, thoughtful design, and creative technology to build meaningful digital
+- `section_01_element_04` — **text** (a): Start a project
+- `section_01_element_05` — **text** (a): View case studies
+
 
 Link destinations:
 - `section_01_link_01_url` — Start a project → `start-project.html`
@@ -38,7 +40,7 @@ Link destinations:
 
 ## Shared implementation notes
 
-- Each top-level section is edited in one page-specific WYSIWYG field with Visual and Text tabs; the Text tab accepts HTML. The source section wrapper/layout remains theme-controlled.
+- Every section has separate fields for its headings, paragraphs, labels, and other text blocks; rich text blocks use individual WYSIWYG controls. The original wrappers and layout remain theme-controlled.
 - Link destinations and images/alt text have separate optional ACF overrides; leave them blank to retain the section HTML's original values.
-- Repeated cards, FAQ items, process steps, statistics, and testimonials are edited together in their containing section HTML so the current page design is preserved.
-- Form action/nonces, field names, required flags, choice values, and server validation remain theme-controlled; don't remove these form-control attributes while editing section HTML.
+- Repeated cards and homogeneous lists use ACF Repeaters with per-item content, link, and image/alt subfields; content and list wrappers remain in the source template.
+- Form controls and server validation remain theme-controlled; section wrappers and layout are not editor fields.
