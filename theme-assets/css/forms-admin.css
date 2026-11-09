@@ -1,0 +1,173 @@
+.alify-form-builder,
+.alify-forms-settings {
+  --alify-form-border: #dcdcde;
+  --alify-form-ink: #1d2327;
+  --alify-form-muted: #646970;
+  --alify-form-accent: #2271b1;
+}
+
+.alify-form-builder > .description {
+  max-width: 72ch;
+  margin: 4px 0 18px;
+  color: var(--alify-form-muted);
+  line-height: 1.55;
+}
+
+.alify-form-builder__fields {
+  display: grid;
+  gap: 14px;
+}
+
+.alify-form-builder__field {
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid var(--alify-form-border);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.alify-form-builder__field-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin: -16px -16px 16px;
+  padding: 11px 16px;
+  border-bottom: 1px solid var(--alify-form-border);
+  border-radius: 8px 8px 0 0;
+  background: #f6f7f7;
+  color: var(--alify-form-ink);
+}
+
+.alify-form-builder__field-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.alify-form-builder__field-actions button {
+  cursor: pointer;
+}
+
+.alify-form-builder__field-actions button:disabled {
+  color: #a7aaad;
+  cursor: default;
+}
+
+.alify-form-builder__field-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(180px, 1fr));
+  align-items: start;
+  gap: 16px 20px;
+}
+
+.alify-form-builder__field-grid > label,
+.alify-form-builder__settings > label {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  color: var(--alify-form-ink);
+  font-weight: 600;
+}
+
+.alify-form-builder__field-grid input[type="text"],
+.alify-form-builder__field-grid select,
+.alify-form-builder__field-grid textarea,
+.alify-form-builder__settings input,
+.alify-form-builder__settings select,
+.alify-form-builder__settings textarea {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+}
+
+.alify-form-builder__required {
+  display: flex !important;
+  align-items: center;
+  align-self: end;
+  min-height: 30px;
+  font-weight: 400 !important;
+}
+
+.alify-form-builder__required input {
+  margin: 0 7px 0 0;
+}
+
+.alify-form-builder__choices[hidden] {
+  display: none !important;
+}
+
+.alify-form-builder__footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.alify-form-builder__footer .description,
+.alify-form-builder__settings .description {
+  color: var(--alify-form-muted);
+  font-weight: 400;
+  line-height: 1.5;
+}
+
+.alify-form-builder__settings {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(220px, 1fr));
+  gap: 18px 24px;
+  max-width: 1040px;
+}
+
+.alify-form-builder__settings > label {
+  align-content: start;
+}
+
+.alify-form-builder__settings > label:last-child {
+  grid-column: 1 / -1;
+}
+
+.alify-form-builder__settings > label > span {
+  display: block;
+}
+
+#alify-form-shortcode .inside code {
+  display: inline-block;
+  padding: 8px 10px;
+  border: 1px solid var(--alify-form-border);
+  border-radius: 4px;
+  background: #f6f7f7;
+  font-size: 13px;
+}
+
+.alify-forms-settings {
+  max-width: 980px;
+}
+
+.alify-forms-settings .form-table th {
+  width: 230px;
+}
+
+@media screen and (max-width: 782px) {
+  .alify-form-builder__field-grid,
+  .alify-form-builder__settings {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .alify-form-builder__settings > label:last-child {
+    grid-column: auto;
+  }
+
+  .alify-form-builder__field {
+    padding: 12px;
+  }
+
+  .alify-form-builder__field-head {
+    margin: -12px -12px 12px;
+    padding: 10px 12px;
+  }
+
+  .alify-form-builder__field-actions {
+    gap: 8px;
+  }
+}

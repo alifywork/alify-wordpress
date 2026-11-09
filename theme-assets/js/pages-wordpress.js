@@ -1,0 +1,283 @@
+"use strict";
+
+document.addEventListener("DOMContentLoaded", () => {
+  const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const formRecoveryPrefix = "alify-form-recovery:";
+  const serverFormKey = (form) => {
+    const id = form.querySelector('[name="form_id"]');
+    const source = form.querySelector('[name="form_source"]');
+    return id && id.value ? `form-${id.value}` : source && source.value ? source.value : "";
+  };
+  const isServerForm = (form) => form.dataset.serverSubmit === "true"
+    || form.querySelector('[name="action"]')?.value === "alify_submit_form"
+    || form.querySelector('[name="action"]')?.value === "alify_submit_inquiry";
+  const saveFormRecovery = (form) => {
+    const key = serverFormKey(form);
+    if (!key || !isServerForm(form)) return;
+    const privateNames = new Set(["action", "form_id", "form_source", "alify_nonce", "_alify_return_to", "alify_company_website", "privacyConsent", "_alify_form_instance"]);
+    const values = [...new FormData(form).entries()].filter(([name, value]) => {
+      if (privateNames.has(name) || typeof value !== "string") return false;
+      const control = [...form.elements].find((item) => item.name === name);
+      return control && !["hidden", "password", "file", "submit", "button", "reset"].includes(control.type);
+    });
+    try {
+      window.sessionStorage.setItem(formRecoveryPrefix + key, JSON.stringify(values));
+    } catch (error) {
+      // Storage can be unavailable in hardened/private browsing; submission still works.
+    }
+  };
+  const restoreFormRecovery = () => {
+    const params = new URLSearchParams(window.location.search);
+    const key = params.get("form_key");
+    const status = params.get("form_status");
+    if (!key || !["error", "success"].includes(status)) return;
+    const storageKey = formRecoveryPrefix + key;
+    try {
+      const saved = window.sessionStorage.getItem(storageKey);
+      window.sessionStorage.removeItem(storageKey);
+      if (status !== "error" || !saved) return;
+      const values = JSON.parse(saved);
+      const form = [...document.querySelectorAll("form[data-inquiry-form], form.alify-form")]
+        .find((candidate) => serverFormKey(candidate) === key);
+      if (!form || !Array.isArray(values)) return;
+      const groupedValues = new Map();
+      values.forEach(([name, value]) => {
+        if (!groupedValues.has(name)) groupedValues.set(name, []);
+        groupedValues.get(name).push(value);
+      });
+      groupedValues.forEach((selectedValues, name) => {
+        const controls = [...form.elements].filter((control) => control.name === name);
+        controls.forEach((control) => {
+          if (["checkbox", "radio"].includes(control.type)) control.checked = selectedValues.includes(control.value);
+          else if (control.tagName === "SELECT" && control.multiple) {
+            [...control.options].forEach((option) => { option.selected = selectedValues.includes(option.value); });
+          } else control.value = selectedValues[selectedValues.length - 1];
+        });
+      });
+    } catch (error) {
+      // Ignore malformed or unavailable one-time recovery data.
+    }
+  };
+  restoreFormRecovery();
+
+  document.querySelectorAll(".alify-form-notice--error[tabindex='-1']").forEach((notice) => {
+    notice.focus({ preventScroll: true });
+    notice.scrollIntoView({ block: "center", behavior: reducedMotion ? "auto" : "smooth" });
+  });
+
+  document.querySelectorAll("fieldset[data-alify-required-group]").forEach((group) => {
+    const firstOption = group.querySelector('input[type="checkbox"]');
+    if (!firstOption) return;
+    const validateGroup = () => {
+      firstOption.setCustomValidity(group.querySelector('input[type="checkbox"]:checked') ? "" : "Please select at least one option.");
+    };
+    validateGroup();
+    group.addEventListener("change", validateGroup);
+  });
+
+  const formParams = new URLSearchParams(window.location.search);
+  if (formParams.get("form_status") === "error") {
+    const errorKey = formParams.get("form_key");
+    const errorForm = [...document.querySelectorAll("form[data-inquiry-form], form.alify-form")]
+      .find((form) => serverFormKey(form) === errorKey);
+    if (errorForm) {
+      const validateControl = (control) => {
+        if (!control.willValidate) return;
+        if (control.checkValidity()) control.removeAttribute("aria-invalid");
+        else control.setAttribute("aria-invalid", "true");
+      };
+      errorForm.querySelectorAll("input, select, textarea").forEach(validateControl);
+      errorForm.addEventListener("input", (event) => validateControl(event.target));
+      errorForm.addEventListener("change", (event) => validateControl(event.target));
+    }
+  }
+
+  document.querySelectorAll("[data-filter-group]").forEach((group) => {
+    const targetSelector = group.dataset.filterGroup;
+    const target = document.querySelector(targetSelector);
+    if (!target) return;
+
+    const buttons = [...group.querySelectorAll("[data-filter]")];
+    const items = [...target.querySelectorAll("[data-category]")];
+    const search = group.querySelector("[data-article-search]");
+    const empty = target.parentElement.querySelector("[data-article-empty]");
+    let activeFilter = "all";
+
+    const applyFilters = () => {
+      const query = search ? search.value.trim().toLowerCase() : "";
+      let visibleCount = 0;
+      items.forEach((item) => {
+        const matchesCategory = activeFilter === "all" || item.dataset.category === activeFilter;
+        const matchesSearch = !query || item.textContent.toLowerCase().includes(query);
+        item.hidden = !(matchesCategory && matchesSearch);
+        if (!item.hidden) visibleCount += 1;
+      });
+      if (empty) empty.hidden = visibleCount > 0;
+    };
+
+    buttons.forEach((button) => {
+      button.addEventListener("click", () => {
+        activeFilter = button.dataset.filter;
+        buttons.forEach((item) => item.setAttribute("aria-pressed", String(item === button)));
+        applyFilters();
+      });
+    });
+    if (search) search.addEventListener("input", applyFilters);
+  });
+
+  const closeFaqItem = (item) => {
+    item.classList.remove("is-open");
+    item.querySelector("[data-faq-button]").setAttribute("aria-expanded", "false");
+    item.querySelector(".faq-list__answer").setAttribute("aria-hidden", "true");
+  };
+
+  document.querySelectorAll("[data-faq-button]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const item = button.closest("[data-faq-item]");
+      const list = item.closest(".faq-list");
+      const willOpen = button.getAttribute("aria-expanded") !== "true";
+      list.querySelectorAll("[data-faq-item].is-open").forEach((openItem) => {
+        if (openItem !== item) closeFaqItem(openItem);
+      });
+      item.classList.toggle("is-open", willOpen);
+      button.setAttribute("aria-expanded", String(willOpen));
+      item.querySelector(".faq-list__answer").setAttribute("aria-hidden", String(!willOpen));
+    });
+  });
+
+  document.querySelectorAll(".faq-content").forEach((content) => {
+    const search = content.querySelector("[data-faq-search]");
+    const items = [...content.querySelectorAll("[data-faq-item]")];
+    const filters = [...content.querySelectorAll("[data-faq-filter]")];
+    const empty = content.querySelector("[data-faq-empty]");
+    let activeCategory = "all";
+
+    const filterFaqs = () => {
+      const query = search.value.trim().toLowerCase();
+      let visibleCount = 0;
+      items.forEach((item) => {
+        const matchesCategory = activeCategory === "all" || item.dataset.category === activeCategory;
+        const matchesSearch = !query || item.textContent.toLowerCase().includes(query);
+        item.hidden = !(matchesCategory && matchesSearch);
+        if (item.hidden) closeFaqItem(item);
+        else visibleCount += 1;
+      });
+      empty.hidden = visibleCount > 0;
+    };
+
+    search.addEventListener("input", filterFaqs);
+    filters.forEach((button) => {
+      button.addEventListener("click", () => {
+        activeCategory = button.dataset.faqFilter;
+        filters.forEach((filter) => filter.setAttribute("aria-pressed", String(filter === button)));
+        filterFaqs();
+      });
+    });
+  });
+
+  const reviewDialog = document.querySelector("[data-inquiry-review]");
+  let activeInquiryForm = null;
+  if (reviewDialog) {
+    reviewDialog.querySelectorAll("[data-review-edit]").forEach((button) => button.addEventListener("click", () => reviewDialog.close()));
+    reviewDialog.addEventListener("click", (event) => {
+      if (event.target === reviewDialog) reviewDialog.close();
+    });
+    reviewDialog.addEventListener("close", () => {
+      activeInquiryForm = null;
+    });
+    const confirmButton = reviewDialog.querySelector("[data-review-confirm]");
+    if (confirmButton) {
+      confirmButton.addEventListener("click", () => {
+        const form = activeInquiryForm;
+        if (!form) {
+          reviewDialog.close();
+          return;
+        }
+        const reviewUrl = form.dataset.reviewUrl;
+        activeInquiryForm = null;
+        reviewDialog.close();
+        if (isServerForm(form)) {
+          saveFormRecovery(form);
+          HTMLFormElement.prototype.submit.call(form);
+          return;
+        }
+        if (reviewUrl) window.location.href = reviewUrl;
+      });
+    }
+  }
+
+  document.querySelectorAll("form[data-inquiry-form], form.alify-form").forEach((form) => {
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      if (!form.reportValidity()) return;
+
+      const data = new FormData(form);
+      const privateFields = new Set(["privacyConsent", "action", "form_id", "form_source", "alify_nonce", "_alify_return_to", "alify_company_website"]);
+      const lines = [];
+      for (const [key, value] of data.entries()) {
+        if (privateFields.has(key)) continue;
+        const label = key.replace(/([A-Z])/g, " $1").replace(/^./, (letter) => letter.toUpperCase());
+        lines.push(`${label}: ${value}`);
+      }
+
+      const subject = `Project inquiry — ${data.get("name") || "Website"}`;
+      const body = `Hello Alify,\n\n${lines.join("\n")}\n\nI would like to discuss this project with you.`;
+      const contactEmail = (window.AlifyTheme && window.AlifyTheme.contactEmail) || "hello@alify.com";
+      const serverSubmit = isServerForm(form);
+      const reviewUrl = serverSubmit
+        ? ""
+        : `mailto:${contactEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+      const content = reviewDialog && reviewDialog.querySelector("[data-review-content]");
+      if (!reviewDialog || !content || typeof reviewDialog.showModal !== "function") {
+        if (serverSubmit) {
+          saveFormRecovery(form);
+          HTMLFormElement.prototype.submit.call(form);
+        } else {
+          window.location.href = reviewUrl;
+        }
+        return;
+      }
+
+      form.dataset.reviewUrl = reviewUrl;
+      activeInquiryForm = form;
+      content.replaceChildren();
+      const grouped = new Map();
+      for (const [key, value] of data.entries()) {
+        if (privateFields.has(key)) continue;
+        const label = key.replace(/([A-Z])/g, " $1").replace(/^./, (letter) => letter.toUpperCase());
+        if (!grouped.has(label)) grouped.set(label, []);
+        grouped.get(label).push(value);
+      }
+      grouped.forEach((values, label) => {
+        const row = document.createElement("div");
+        const term = document.createElement("dt");
+        const detail = document.createElement("dd");
+        term.textContent = label;
+        detail.textContent = values.join(", ");
+        row.append(term, detail);
+        content.append(row);
+      });
+      reviewDialog.showModal();
+    });
+    // The original homepage bundle has a mailto-only inquiry listener. The server
+    // handler above owns this form, so remove its marker before that bundle scans.
+    if (isServerForm(form) && form.closest(".home-inquiry")) {
+      form.removeAttribute("data-inquiry-form");
+    }
+  });
+
+  if (reducedMotion || !window.gsap || !window.ScrollTrigger) return;
+  window.gsap.registerPlugin(window.ScrollTrigger);
+  window.gsap.utils.toArray("[data-page-reveal]").forEach((element) => {
+    window.gsap.from(element, {
+      scrollTrigger: {
+        trigger: element,
+        start: "top 88%",
+        once: true
+      },
+      y: 32,
+      duration: 0.75,
+      ease: "power3.out"
+    });
+  });
+});
