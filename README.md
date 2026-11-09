@@ -23,6 +23,8 @@ A custom WordPress theme with the supplied Alify front-end converted into PHP te
 
 ## ACF Pro
 
+Page-by-page content-field inventories for all 39 bundled source pages live in [`docs/acf-page-fields/`](docs/acf-page-fields/), with a regeneration script at `tools/generate-acf-page-field-docs.py`. These Markdown files are the field-mapping/planning phase; the page-specific field groups and render integration are a separate implementation phase. Existing shared settings and generic Flexible Content fields remain defined in `inc/acf.php`.
+
 ACF Pro is optional for activation and form editing. When active it adds Theme Settings for general details, a default social-share image, and header/footer, plus a Flexible Content builder (text, image/text, card grid, FAQ, CTA). Form definitions and reusable Form Templates use the theme's native field builder with or without ACF Pro; existing form metadata remains compatible. Without ACF Pro, **Forms → Forms Settings** provides the notification email, default success message, and Privacy Policy page. With ACF Pro, the corresponding global defaults are under **Theme Settings → Forms**. Without an SEO plugin, the theme emits fallback descriptions, archive canonical URLs, and Open Graph/Twitter metadata, using a post's featured image or the default social-share image when available. General and Header & Footer Theme Settings are available to users with `edit_theme_options`; Forms Settings, form definitions, Form Templates, entries, and exports remain restricted to users with `manage_options`. A Form can use a reusable Form Template when it has no fields of its own. ACF is not required for the starter source layouts or source inquiry forms.
 
 ## First-time setup
