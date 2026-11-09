@@ -399,14 +399,39 @@ function alify_prepare_source_inquiry( $markup, $source ) {
 	// Ensure every fixed inquiry design has consent, with a policy link outside its label.
 	if ( ! preg_match( '~\bname=("|\x27)privacyConsent\1~i', $markup ) ) {
 		$consent = alify_source_privacy_consent_markup( $source_key );
-		$markup  = preg_replace_callback(
-			'~</form>~i',
+		$consent_inserted = false;
+		$markup = preg_replace_callback(
+			'~<div\s+class=("|\x27)[^"\x27]*\binquiry-form__footer\b[^"\x27]*\1~i',
 			function ( $matches ) use ( $consent ) {
 				return $consent . $matches[0];
 			},
 			$markup,
-			1
+			1,
+			$count
 		);
+		$consent_inserted = ! empty( $count );
+		if ( ! $consent_inserted ) {
+			$markup = preg_replace_callback(
+				'~<div\s+class=("|\x27)[^"\x27]*\bform-actions\b[^"\x27]*\1|<button\b[^>]*type=("|\x27)submit\2~i',
+				function ( $matches ) use ( $consent ) {
+					return $consent . $matches[0];
+				},
+				$markup,
+				1,
+				$count
+			);
+			$consent_inserted = ! empty( $count );
+		}
+		if ( ! $consent_inserted ) {
+			$markup = preg_replace_callback(
+				'~</form>~i',
+				function ( $matches ) use ( $consent ) {
+					return $consent . $matches[0];
+				},
+				$markup,
+				1
+			);
+		}
 	} else {
 		$consent = alify_source_privacy_consent_markup( $source_key );
 		$markup  = preg_replace_callback(

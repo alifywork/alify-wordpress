@@ -218,7 +218,53 @@ function alify_get_source_thumbnail_id( $slug, $media_map ) {
 	return 0;
 }
 
+/** Draft only untouched, canonical WordPress demo records; preserve edited content. */
+function alify_draft_default_wordpress_content() {
+	$defaults = array(
+		array(
+			'post_type' => 'page',
+			'slug' => 'sample-page',
+			'title' => 'Sample Page',
+			'content' => array(
+				'This is an example page. It’s different from a blog post because it will stay in one place and will show up in your site navigation (in most themes). Most people start with an About page that introduces them to potential site visitors. It might say something like this:',
+				'This is an example page. It’s different from a blog post because it will stay in one place and will show up in your site navigation (in most themes). Most people start with an About page that introduces them to potential site visitors. It might say something like this: Hi there! I’m a bike messenger by day, aspiring actor by night, and this is my website. I live in Los Angeles, have a great dog named Jack, and I like piña coladas. (And gettin’ caught in the rain.) …or something like this: The XYZ Doohickey Company was founded in 1971, and has been providing quality doohickeys to the public ever since. Located in Gotham City, XYZ employs over 2,000 people and does all kinds of awesome things for the Gotham community.',
+				'This is an example page. It’s different from a blog post because it will stay in one place and will show up in your site navigation (in most themes). Most people start with an About page that introduces them to potential site visitors. It might say something like this: Hi there! I\'m a bike messenger by day, aspiring actor by night, and this is my website. I live in Los Angeles, have a great dog named Jack, and I like piña coladas. (And gettin\' caught in the rain.) ...or something like this: The XYZ Doohickey Company was founded in 1971, and has been providing quality doohickeys to the public ever since. Located in Gotham City, XYZ employs over 2,000 people and does all kinds of awesome things for the Gotham community.',
+			),
+		),
+		array(
+			'post_type' => 'post',
+			'slug' => 'hello-world',
+			'title' => 'Hello world!',
+			'content' => 'Welcome to WordPress. This is your first post. Edit or delete it, then start writing!',
+		),
+	);
+	$drafted = 0;
+	foreach ( $defaults as $default ) {
+		$record = get_page_by_path( $default['slug'], OBJECT, $default['post_type'] );
+		if ( ! $record || 'publish' !== $record->post_status || $default['title'] !== $record->post_title ) {
+			continue;
+		}
+		$actual_content = html_entity_decode( wp_strip_all_tags( (string) $record->post_content ), ENT_QUOTES | ENT_HTML5, get_bloginfo( 'charset' ) );
+		$actual_content = preg_replace( '/\\s+/u', ' ', trim( $actual_content ) );
+		$expected_content = array_map(
+			function ( $content ) {
+				return preg_replace( '/\\s+/u', ' ', trim( $content ) );
+			},
+			(array) $default['content']
+		);
+		if ( ! in_array( $actual_content, $expected_content, true ) ) {
+			continue;
+		}
+		$result = wp_update_post( array( 'ID' => $record->ID, 'post_status' => 'draft' ), true );
+		if ( ! is_wp_error( $result ) ) {
+			++$drafted;
+		}
+	}
+	return $drafted;
+}
+
 function alify_import_starter_content() {
+	$samples_drafted = alify_draft_default_wordpress_content();
 	$media_result = alify_import_source_media_assets();
 	$media_map    = $media_result['map'];
 	$created      = 0;
@@ -321,6 +367,7 @@ function alify_import_starter_content() {
 	}
 	return array(
 		'created'        => $created,
+		'samples_drafted' => $samples_drafted,
 		'skipped'        => $skipped,
 		'media_imported' => $media_result['imported'],
 		'errors'         => $errors,
@@ -344,10 +391,10 @@ function alify_content_setup_page() {
 		<h1><?php esc_html_e( 'Alify Theme Setup', 'alify' ); ?></h1>
 		<p><?php esc_html_e( 'Create the starter Pages and published CPT/Blog records that connect the converted PHP designs and navigation. Existing matching slugs are preserved; this can safely be run more than once.', 'alify' ); ?></p>
 		<?php if ( is_array( $result ) ) : ?>
-			<div class="notice notice-success"><p><?php echo esc_html( sprintf( __( 'Setup complete: %1$d records created, %2$d already existed, and %3$d source image assets were added to the Media Library.', 'alify' ), $result['created'], $result['skipped'], $result['media_imported'] ) ); ?></p></div>
+			<div class="notice notice-success"><p><?php echo esc_html( sprintf( __( 'Setup complete: %1$d records created, %2$d already existed, and %3$d source image assets were added to the Media Library.', 'alify' ), $result['created'], $result['skipped'], $result['media_imported'] ) ); ?></p><?php if ( ! empty( $result['samples_drafted'] ) ) : ?><p><?php echo esc_html( sprintf( _n( '%d untouched default WordPress sample item was moved to Draft.', '%d untouched default WordPress sample items were moved to Draft.', $result['samples_drafted'], 'alify' ), $result['samples_drafted'] ) ); ?></p><?php endif; ?></div>
 			<?php if ( ! empty( $result['errors'] ) ) : ?><div class="notice notice-error"><p><?php echo esc_html( implode( ' | ', $result['errors'] ) ); ?></p></div><?php endif; ?>
 		<?php endif; ?>
-		<p><?php esc_html_e( 'This adds starter titles, slugs, editable source page markup, excerpts, and image references. Existing body content and editor-authored excerpts are preserved when rerun. New records display the original design by default; choose WordPress Content in the page presentation box to use the editable body.', 'alify' ); ?></p>
+		<p><?php esc_html_e( 'This adds starter titles, slugs, editable source page markup, excerpts, and image references. Existing body content and editor-authored excerpts are preserved when rerun. Only untouched, canonical WordPress Sample Page and Hello world! demo records are moved to Draft; edited content is preserved. New records display the original design by default; choose WordPress Content in the page presentation box to use the editable body.', 'alify' ); ?></p>
 		<form method="post">
 			<?php wp_nonce_field( 'alify_import_starter_content_action', 'alify_import_starter_content_nonce' ); ?>
 			<?php submit_button( __( 'Create / Repair Starter Pages & Content', 'alify' ), 'primary', 'alify_import_starter_content' ); ?>

@@ -436,6 +436,11 @@ function alify_resolve_source_url( $slug ) {
 	if ( 'service-single' === $slug ) {
 		$slug = 'web-development';
 	}
+	// Industry source pages are CPT singles; never let a colliding attachment/page
+	// slug capture these bundled routes (or produce a bare /healthcare/ URL).
+	if ( in_array( $slug, array( 'healthcare', 'real-estate' ), true ) ) {
+		return home_url( '/industries/' . $slug . '/' );
+	}
 	if ( isset( $archives[ $slug ] ) ) {
 		$link = get_post_type_archive_link( $archives[ $slug ] );
 		if ( $link ) {
@@ -646,10 +651,15 @@ function alify_render_source_view( $slug ) {
 		the_post();
 	}
 
+	$privacy_placeholder = false;
+	if ( is_singular() && 'privacy-policy' === $slug ) {
+		$privacy_content = (string) get_post_field( 'post_content', get_queried_object_id() );
+		$privacy_placeholder = (bool) preg_match( '/suggested\\s+text\\s*:/i', $privacy_content );
+	}
 	if ( is_singular() ) {
 		$post_id = get_queried_object_id();
 		$mode    = get_post_meta( $post_id, '_alify_content_mode', true );
-		if ( 'content' === $mode && alify_render_editable_source_content( $slug ) ) {
+		if ( 'content' === $mode && ! $privacy_placeholder && alify_render_editable_source_content( $slug ) ) {
 			return true;
 		}
 	}
@@ -661,7 +671,7 @@ function alify_render_source_view( $slug ) {
 		$post_content = trim( (string) get_post_field( 'post_content', $post_id ) );
 		$mode         = get_post_meta( $post_id, '_alify_content_mode', true );
 		$imported     = get_post_meta( $post_id, '_alify_source_content_imported', true );
-		if ( ! $imported && 'source' !== $mode && '' !== $post_content && alify_render_editable_source_content( $slug ) ) {
+		if ( ! $imported && ! $privacy_placeholder && 'source' !== $mode && '' !== $post_content && alify_render_editable_source_content( $slug ) ) {
 			return true;
 		}
 	}

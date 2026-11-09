@@ -1997,3 +1997,4 @@
 .insights-archive-link {
   margin-top: 2rem;
 }
+.inquiry-form .form-consent{display:grid;gap:.45rem;margin:0 0 1rem;padding:.75rem 0;color:rgba(255,255,255,.76);font-size:.78rem;line-height:1.5}.inquiry-form .form-consent label{display:flex;align-items:flex-start;gap:.55rem;margin:0;cursor:pointer}.inquiry-form .form-consent label>span{display:inline;margin:0;color:inherit;font-size:inherit;line-height:inherit}.inquiry-form .form-consent input{width:1rem;height:1rem;flex:0 0 1rem;margin:.15rem 0 0;accent-color:var(--color-primary)}.inquiry-form .form-consent a{width:max-content;color:var(--color-amber);text-underline-offset:.18em}.inquiry-form .form-consent :focus-visible{outline:3px solid var(--color-primary);outline-offset:3px}@media(max-width:600px){.inquiry-form .form-consent{padding:.6rem 0;font-size:.75rem}.inquiry-form .form-consent label{gap:.45rem}}
