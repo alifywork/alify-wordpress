@@ -42,3 +42,79 @@ site-header,site-footer{display:block}
 
 .alify-archive-search{max-width:700px;margin:0 auto 32px}.alify-archive-search>label{display:block;margin-bottom:8px;font-weight:600}.alify-archive-search>div{display:flex;gap:10px}.alify-archive-search input{flex:1;min-width:0;padding:13px 16px;border:1px solid rgba(255,255,255,.24);border-radius:10px;background:rgba(255,255,255,.06);color:inherit}.alify-archive-search button{padding:12px 20px;border:0;border-radius:10px;background:var(--color-amber);color:var(--color-charcoal);font:inherit;font-weight:600;cursor:pointer}.alify-not-found__links{display:flex;flex-wrap:wrap;align-items:center;gap:20px;margin-top:28px}
 .alify-form-options legend{width:100%;margin-bottom:8px;font-weight:600}
+
+/* The reusable shortcode form shares the imported Contact/Start Project design. */
+.alify-form .alify-form__required-note {
+  margin: 0;
+  color: color-mix(in srgb, var(--color-charcoal, #12151c) 70%, transparent);
+  font-size: .78rem;
+  line-height: 1.5;
+}
+.alify-form__required-note span {
+  color: var(--color-accent, #b53d28);
+  font-weight: 700;
+}
+.alify-form .form-actions {
+  align-items: center;
+}
+.alify-form .form-actions .button {
+  min-height: 48px;
+}
+.alify-form .alify-form-consent {
+  grid-column: 1 / -1;
+}
+.alify-form .alify-form-options label {
+  min-height: 40px;
+  padding: 8px 12px;
+  border: 1px solid color-mix(in srgb, var(--color-primary, #0f3473) 18%, transparent);
+  border-radius: 999px;
+  background: #fff;
+  cursor: pointer;
+}
+.alify-form .alify-form-options label:focus-within {
+  outline: 2px solid var(--color-primary, #0f3473);
+  outline-offset: 2px;
+}
+.alify-form .alify-form-options input {
+  min-height: auto;
+  accent-color: var(--color-primary, #0f3473);
+}
+.alify-form-notice,
+.alify-form-error {
+  padding: 14px 18px;
+  border: 1px solid color-mix(in srgb, var(--color-teal, #0f8a73) 48%, transparent);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--color-teal, #0f8a73) 8%, #fff);
+  color: var(--color-charcoal, #12151c);
+  line-height: 1.6;
+}
+.alify-form-notice--error,
+.alify-form-error {
+  border-color: color-mix(in srgb, var(--color-accent, #e05a3a) 58%, transparent);
+  background: color-mix(in srgb, var(--color-accent, #e05a3a) 8%, #fff);
+}
+@media (max-width: 575.98px) {
+  .alify-form .form-actions .button {
+    width: 100%;
+    justify-content: center;
+  }
+}
+.alify-required-marker {
+  margin-inline-start: .15em;
+  color: var(--color-accent, #b53d28);
+  font-weight: 700;
+}
+.alify-form__required-note {
+  color: color-mix(in srgb, var(--color-charcoal, #12151c) 72%, transparent);
+  font-size: .78rem;
+  line-height: 1.5;
+}
+form[data-server-submit="true"] :is(input, select, textarea)[aria-invalid="true"],
+.alify-form :is(input, select, textarea)[aria-invalid="true"] {
+  border-color: #b42318;
+  box-shadow: 0 0 0 2px color-mix(in srgb, #b42318 15%, transparent);
+}
+form[data-server-submit="true"] :is(input, select, textarea)[aria-invalid="true"]:focus-visible,
+.alify-form :is(input, select, textarea)[aria-invalid="true"]:focus-visible {
+  outline-color: #b42318;
+}

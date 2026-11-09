@@ -65,31 +65,57 @@ function alify_private_form_entry_rest( $args, $post_type ) {
 add_filter( 'register_post_type_args', 'alify_private_form_entry_rest', 10, 2 );
 
 /** Field definitions on a form take priority; otherwise use its chosen template. */
-function alify_get_form_option( $form_id, $field_name ) {
-	if ( ! function_exists( 'get_field' ) ) {
-		return '';
+function alify_get_form_meta_value( $field_name, $post_id ) {
+	$value = get_post_meta( $post_id, $field_name, true );
+	if ( '' === $value && function_exists( 'get_field' ) ) {
+		$value = get_field( $field_name, $post_id );
 	}
-	$value = get_field( $field_name, $form_id );
-	if ( $value ) {
+	return $value;
+}
+
+function alify_get_form_option( $form_id, $field_name ) {
+	$value = alify_get_form_meta_value( $field_name, $form_id );
+	if ( '' !== $value && false !== $value && null !== $value ) {
 		return $value;
 	}
-	$template_id = absint( get_field( 'form_template', $form_id ) );
-	return $template_id ? get_field( $field_name, $template_id ) : '';
+	$template_id = absint( alify_get_form_meta_value( 'form_template', $form_id ) );
+	if ( ! $template_id || 'alify_form_template' !== get_post_type( $template_id ) ) {
+		return '';
+	}
+	return alify_get_form_meta_value( $field_name, $template_id );
+}
+
+function alify_get_stored_form_fields( $post_id ) {
+	$fields = get_post_meta( $post_id, 'form_fields', true );
+	if ( is_array( $fields ) ) {
+		return array_values( $fields );
+	}
+
+	// Older ACF repeater data is stored as a row count plus indexed sub-fields.
+	$row_count = absint( $fields );
+	$legacy   = array();
+	for ( $index = 0; $index < min( $row_count, 40 ); ++$index ) {
+		$legacy[] = array(
+			'label'      => get_post_meta( $post_id, 'form_fields_' . $index . '_label', true ),
+			'field_name' => get_post_meta( $post_id, 'form_fields_' . $index . '_field_name', true ),
+			'field_type' => get_post_meta( $post_id, 'form_fields_' . $index . '_field_type', true ),
+			'required'   => get_post_meta( $post_id, 'form_fields_' . $index . '_required', true ),
+			'options'    => get_post_meta( $post_id, 'form_fields_' . $index . '_options', true ),
+		);
+	}
+	return $legacy;
 }
 
 function alify_get_form_fields( $form_id ) {
-	if ( ! function_exists( 'get_field' ) ) {
-		return array();
-	}
-	$fields = get_field( 'form_fields', $form_id );
-	if ( is_array( $fields ) && ! empty( $fields ) ) {
+	$fields = alify_get_stored_form_fields( $form_id );
+	if ( ! empty( $fields ) ) {
 		return $fields;
 	}
-	$template_id = absint( get_field( 'form_template', $form_id ) );
+	$template_id = absint( alify_get_form_meta_value( 'form_template', $form_id ) );
 	if ( $template_id && 'alify_form_template' === get_post_type( $template_id ) ) {
-		$fields = get_field( 'form_fields', $template_id );
+		$fields = alify_get_stored_form_fields( $template_id );
 	}
-	return is_array( $fields ) ? $fields : array();
+	return $fields;
 }
 
 /** Accept only recognized scalar status values from a form's post/redirect/get response. */
@@ -100,6 +126,29 @@ function alify_get_form_status( $expected_key ) {
 	$status = sanitize_key( wp_unslash( $_GET['form_status'] ) );
 	$key    = sanitize_key( wp_unslash( $_GET['form_key'] ) );
 	return hash_equals( (string) $expected_key, $key ) && in_array( $status, array( 'success', 'error' ), true ) ? $status : '';
+}
+
+/** Return a safe, actionable validation message without placing submitted data in the URL. */
+function alify_get_form_error_message( $expected_key ) {
+	if ( 'error' !== alify_get_form_status( $expected_key ) || ! isset( $_GET['form_error'] ) || ! is_scalar( $_GET['form_error'] ) ) {
+		return __( 'Your message was not sent. Please review the form and try again.', 'alify' );
+	}
+	$error = sanitize_key( wp_unslash( $_GET['form_error'] ) );
+	$messages = array(
+		'required'         => __( 'Please complete the required fields and try again.', 'alify' ),
+		'invalid_email'    => __( 'Please enter a valid email address.', 'alify' ),
+		'invalid_url'      => __( 'Please enter a valid website URL.', 'alify' ),
+		'invalid_choice'   => __( 'Please choose one of the listed options.', 'alify' ),
+		'too_many_choices' => __( 'Please select fewer options and try again.', 'alify' ),
+		'invalid_value'    => __( 'One of the submitted values is invalid. Please review your choices.', 'alify' ),
+		'privacy'          => __( 'Please accept the privacy notice before sending your message.', 'alify' ),
+		'too_long'         => __( 'Some answers are too long. Please shorten them and try again.', 'alify' ),
+		'brief_too_short'  => __( 'Please add a little more detail to your project brief.', 'alify' ),
+		'missing_fields'   => __( 'This form is not ready to receive submissions. Please contact the site team.', 'alify' ),
+		'rate_limit'       => __( 'Too many submissions were made recently. Please wait a few minutes and try again.', 'alify' ),
+		'expired'          => __( 'This form expired before submission. Please review the fields and submit it again.', 'alify' ),
+	);
+	return isset( $messages[ $error ] ) ? $messages[ $error ] : __( 'Your message was not sent. Please review the form and try again.', 'alify' );
 }
 
 /** Parse newline choices; each line may be a label, or Label|stored-value. */
@@ -178,22 +227,23 @@ function alify_form_shortcode( $attributes ) {
 	ob_start();
 	$form_instance = function_exists( 'wp_unique_id' ) ? wp_unique_id( 'alify-form-' . $form_id . '-' ) : 'alify-form-' . $form_id . '-' . wp_rand( 1000, 999999 );
 	if ( current_user_can( 'edit_posts' ) && is_array( $raw_fields ) && count( $fields ) < count( $raw_fields ) ) {
-		echo '<p class="alify-form-error">' . esc_html__( 'Some configured fields were skipped because their names are reserved, duplicated, or incomplete. Review the field definitions in ACF.', 'alify' ) . '</p>';
+		echo '<p class="alify-form-error" role="alert">' . esc_html__( 'Some fields were skipped because their names are reserved, duplicated, or incomplete. Review this form’s Form Fields panel.', 'alify' ) . '</p>';
 	}
 	$status_key = 'form-' . $form_id;
 	$status     = alify_get_form_status( $status_key );
 	if ( $status ) {
-		$message = 'success' === $status ? alify_get_form_option( $form_id, 'success_message' ) : '';
-		if ( ! $message && 'success' === $status && function_exists( 'get_field' ) ) {
-			$message = get_field( 'forms_success_message', 'option' );
+		$message = 'error' === $status ? alify_get_form_error_message( $status_key ) : alify_get_form_option( $form_id, 'success_message' );
+		if ( ! $message && 'success' === $status && function_exists( 'alify_get_forms_setting' ) ) {
+			$message = alify_get_forms_setting( 'forms_success_message' );
 		}
 		if ( ! $message ) {
-			$message = 'success' === $status ? __( 'Thanks, your message has been received.', 'alify' ) : __( 'There was a problem submitting your message. Please check the form and try again.', 'alify' );
+			$message = __( 'Thanks, your message has been received.', 'alify' );
 		}
-		echo '<p class="alify-form-notice alify-form-notice--' . esc_attr( $status ) . '" role="status">' . esc_html( $message ) . '</p>';
+		echo '<p class="alify-form-notice alify-form-notice--' . esc_attr( $status ) . '" role="' . ( 'error' === $status ? 'alert' : 'status' ) . '" tabindex="-1">' . esc_html( $message ) . '</p>';
 	}
 	?>
 	<form class="form-grid alify-form" method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+		<p class="alify-form__required-note form-field--full"><span class="alify-required-marker" aria-hidden="true">*</span> <?php esc_html_e( 'Fields marked with an asterisk are required.', 'alify' ); ?></p>
 		<input type="hidden" name="action" value="alify_submit_form">
 		<input type="hidden" name="form_id" value="<?php echo esc_attr( $form_id ); ?>">
 		<input type="hidden" name="alify_nonce" value="<?php echo esc_attr( wp_create_nonce( 'alify_public_form' ) ); ?>">
@@ -222,13 +272,13 @@ function alify_form_shortcode( $attributes ) {
 			</div>
 		<?php endforeach; ?>
 		<?php
-		$privacy_page = function_exists( 'get_field' ) ? absint( get_field( 'forms_privacy_page', 'option' ) ) : 0;
+		$privacy_page = function_exists( 'alify_get_forms_setting' ) ? absint( alify_get_forms_setting( 'forms_privacy_page' ) ) : 0;
 		$privacy_url  = $privacy_page && 'publish' === get_post_status( $privacy_page ) ? get_permalink( $privacy_page ) : '';
 		$privacy_url  = $privacy_url ? $privacy_url : alify_source_url( 'privacy-policy' );
 		?>
-		<div class="form-field form-consent alify-form-consent"><label for="<?php echo esc_attr( $form_instance . 'privacyConsent' ); ?>"><input id="<?php echo esc_attr( $form_instance . 'privacyConsent' ); ?>" type="checkbox" name="privacyConsent" value="Accepted" required> <?php esc_html_e( 'I agree to the use of my information to respond to this inquiry.', 'alify' ); ?></label> <a href="<?php echo esc_url( $privacy_url ); ?>"><?php esc_html_e( 'Read our Privacy Policy.', 'alify' ); ?></a></div>
+		<div class="form-field form-consent alify-form-consent"><label for="<?php echo esc_attr( $form_instance . 'privacyConsent' ); ?>"><input id="<?php echo esc_attr( $form_instance . 'privacyConsent' ); ?>" type="checkbox" name="privacyConsent" value="Accepted" required> <?php esc_html_e( 'I agree to the use of my information to respond to this inquiry.', 'alify' ); ?> <span class="alify-required-marker" aria-hidden="true">*</span></label> <a href="<?php echo esc_url( $privacy_url ); ?>"><?php esc_html_e( 'Read our Privacy Policy.', 'alify' ); ?></a></div>
 		<div class="alify-honeypot" aria-hidden="true"><label for="alify-company-website-<?php echo esc_attr( $form_instance ); ?>"><?php esc_html_e( 'Leave this field empty', 'alify' ); ?><input id="alify-company-website-<?php echo esc_attr( $form_instance ); ?>" name="alify_company_website" type="text" tabindex="-1" autocomplete="off"></label></div>
-		<button class="button button--primary" type="submit"><?php echo esc_html( $attributes['submit_label'] ); ?> <i class="fa-solid fa-arrow-right icon-arrow-up-right" aria-hidden="true"></i></button>
+		<div class="form-actions"><button class="button button--primary" type="submit"><?php echo esc_html( $attributes['submit_label'] ); ?> <i class="fa-solid fa-arrow-right icon-arrow-up-right" aria-hidden="true"></i></button></div>
 	</form>
 	<?php
 	return ob_get_clean();
@@ -236,9 +286,85 @@ function alify_form_shortcode( $attributes ) {
 add_shortcode( 'alify_form', 'alify_form_shortcode' );
 
 /** Build accessible required privacy consent with a separate, keyboard-operable policy link. */
+function alify_mark_required_inquiry_fields( $markup ) {
+	$required_controls = array();
+	preg_match_all( '~<(input|select|textarea)\b[^>]*>~i', $markup, $controls, PREG_SET_ORDER );
+	foreach ( $controls as $control ) {
+		$tag = $control[0];
+		if ( ! preg_match( '~\brequired(?=\s|=|/|>)~i', $tag ) ) {
+			continue;
+		}
+		$id = '';
+		$type = '';
+		$name = '';
+		if ( preg_match( '~\bid\s*=\s*(["\x27])([^"\x27]*)\1~i', $tag, $match ) ) {
+			$id = $match[2];
+		}
+		if ( preg_match( '~\btype\s*=\s*(["\x27])([^"\x27]*)\1~i', $tag, $match ) ) {
+			$type = strtolower( $match[2] );
+		}
+		if ( preg_match( '~\bname\s*=\s*(["\x27])([^"\x27]*)\1~i', $tag, $match ) ) {
+			$name = $match[2];
+		}
+		$control = array( 'type' => $type, 'name' => $name );
+		if ( $id ) {
+			$required_controls[ 'id:' . $id ] = $control;
+		}
+		if ( $name ) {
+			$required_controls[ 'name:' . $name ] = $control;
+		}
+	}
+
+	$markup = preg_replace_callback(
+		'~<label\b([^>]*)>(.*?)</label>~is',
+		function ( $matches ) use ( $required_controls ) {
+			if ( false !== strpos( $matches[2], 'alify-required-marker' ) ) {
+				return $matches[0];
+			}
+			$control = null;
+			$has_for = preg_match( '~\bfor\s*=\s*(["\x27])([^"\x27]*)\1~i', $matches[1], $for_match );
+			if ( $has_for ) {
+				$control = $required_controls[ 'id:' . $for_match[2] ] ?? null;
+			} elseif ( preg_match( '~<(input|select|textarea)\b([^>]*)>~i', $matches[2], $nested_control ) ) {
+				if ( preg_match( '~\bname\s*=\s*(["\x27])([^"\x27]*)\1~i', $nested_control[2], $name_match ) ) {
+					$control = $required_controls[ 'name:' . $name_match[2] ] ?? null;
+				}
+			}
+			if ( ! $control ) {
+				return $matches[0];
+			}
+			if ( in_array( $control['type'], array( 'checkbox', 'radio' ), true ) && 'privacyConsent' !== $control['name'] ) {
+				return $matches[0];
+			}
+			$marker = '<span class="alify-required-marker" aria-hidden="true">*</span>';
+			$body   = $matches[2];
+			if ( ! $has_for && preg_match( '~</span>~i', $body ) ) {
+				$body = preg_replace( '~</span>~i', ' ' . $marker . '</span>', $body, 1 );
+			} else {
+				$body .= ' ' . $marker;
+			}
+			return '<label' . $matches[1] . '>' . $body . '</label>';
+		},
+		$markup
+	);
+
+	return preg_replace_callback(
+		'~<fieldset\b([^>]*)>(.*?)</fieldset>~is',
+		function ( $matches ) {
+			$required_group = false !== strpos( $matches[1], 'data-alify-required-group' ) || (bool) preg_match( '~<input\b(?=[^>]*\btype\s*=\s*(["\x27])radio\1)(?=[^>]*\brequired)[^>]*>~i', $matches[2] );
+			if ( ! $required_group || false !== strpos( $matches[2], 'alify-required-marker' ) ) {
+				return $matches[0];
+			}
+			$inner = preg_replace( '~</legend>~i', ' <span class="alify-required-marker" aria-hidden="true">*</span></legend>', $matches[2], 1 );
+			return '<fieldset' . $matches[1] . '>' . $inner . '</fieldset>';
+		},
+		$markup
+	);
+}
+
 function alify_source_privacy_consent_markup( $source ) {
 	$source       = sanitize_html_class( $source );
-	$privacy_page = function_exists( 'get_field' ) ? absint( get_field( 'forms_privacy_page', 'option' ) ) : 0;
+	$privacy_page = function_exists( 'alify_get_forms_setting' ) ? absint( alify_get_forms_setting( 'forms_privacy_page' ) ) : 0;
 	$privacy_url  = $privacy_page && 'publish' === get_post_status( $privacy_page ) ? get_permalink( $privacy_page ) : '';
 	$privacy_url  = $privacy_url ? $privacy_url : alify_source_url( 'privacy-policy' );
 	return '<div class="form-consent form-field--full"><label for="alify-privacy-consent-' . esc_attr( $source ) . '"><input id="alify-privacy-consent-' . esc_attr( $source ) . '" type="checkbox" name="privacyConsent" value="Accepted" required><span>' . esc_html__( 'I agree that these details may be used to respond to my inquiry.', 'alify' ) . '</span></label><a href="' . esc_url( $privacy_url ) . '">' . esc_html__( 'Read our Privacy Policy.', 'alify' ) . '</a></div>';
@@ -259,14 +385,15 @@ function alify_prepare_source_inquiry( $markup, $source ) {
 		. '<input type="hidden" name="alify_nonce" value="' . esc_attr( wp_create_nonce( 'alify_public_form' ) ) . '">'
 		. '<input type="hidden" name="_alify_return_to" value="' . esc_url( $return_to ) . '">'
 		. '<div class="alify-honeypot" aria-hidden="true"><label for="' . esc_attr( $honeypot_id ) . '">' . esc_html__( 'Leave this field empty', 'alify' ) . '<input id="' . esc_attr( $honeypot_id ) . '" name="alify_company_website" type="text" tabindex="-1" autocomplete="off"></label></div>';
+	$hidden = '<p class="alify-form__required-note form-field--full"><span class="alify-required-marker" aria-hidden="true">*</span> ' . esc_html__( 'Fields marked with an asterisk are required.', 'alify' ) . '</p>' . $hidden;
 
 	$status = alify_get_form_status( $source_key );
 	if ( $status ) {
-		$message = 'success' === $status && function_exists( 'get_field' ) ? get_field( 'forms_success_message', 'option' ) : '';
+		$message = 'error' === $status ? alify_get_form_error_message( $source_key ) : ( function_exists( 'alify_get_forms_setting' ) ? alify_get_forms_setting( 'forms_success_message' ) : '' );
 		if ( ! $message ) {
-			$message = 'success' === $status ? __( 'Thanks, your inquiry has been received by the site.', 'alify' ) : __( 'There was a problem submitting your inquiry. Please check the form and try again.', 'alify' );
+			$message = __( 'Thanks, your inquiry has been received by the site.', 'alify' );
 		}
-		$hidden = '<p class="alify-form-notice alify-form-notice--' . esc_attr( $status ) . '" role="status">' . esc_html( $message ) . '</p>' . $hidden;
+		$hidden = '<p class="alify-form-notice alify-form-notice--' . esc_attr( $status ) . '" role="' . ( 'error' === $status ? 'alert' : 'status' ) . '" tabindex="-1">' . esc_html( $message ) . '</p>' . $hidden;
 	}
 
 	// Ensure every fixed inquiry design has consent, with a policy link outside its label.
@@ -332,7 +459,8 @@ function alify_prepare_source_inquiry( $markup, $source ) {
 		'~<form\b([^>]*\bdata-inquiry-form[^>]*)>(.*?)</form>~is',
 		function ( $matches ) use ( $action, $hidden ) {
 			$attributes = preg_replace( '~\s+(?:action|method|data-server-submit)\s*=\s*(?:"[^"]*"|\x27[^\x27]*\x27|[^\s>]+)~i', '', $matches[1] );
-			return '<form' . $attributes . ' action="' . $action . '" method="post" data-server-submit="true">' . $hidden . $matches[2] . '</form>';
+			$inner      = alify_mark_required_inquiry_fields( $hidden . $matches[2] );
+			return '<form' . $attributes . ' action="' . $action . '" method="post" data-server-submit="true">' . $inner . '</form>';
 		},
 		$markup,
 		1
@@ -530,19 +658,22 @@ function alify_handle_public_form_submission() {
 	if ( 'POST' !== strtoupper( $request_method ) ) {
 		wp_die( esc_html__( 'Invalid form request.', 'alify' ), '', array( 'response' => 405 ) );
 	}
-	$nonce = isset( $_POST['alify_nonce'] ) && is_scalar( $_POST['alify_nonce'] ) ? sanitize_text_field( wp_unslash( $_POST['alify_nonce'] ) ) : '';
-	if ( ! wp_verify_nonce( $nonce, 'alify_public_form' ) ) {
-		wp_die( esc_html__( 'This form has expired. Please return to the site and try again.', 'alify' ), '', array( 'response' => 403 ) );
-	}
-
-	$action  = isset( $_POST['action'] ) && is_scalar( $_POST['action'] ) ? sanitize_key( wp_unslash( $_POST['action'] ) ) : '';
-	$form_id = isset( $_POST['form_id'] ) && is_scalar( $_POST['form_id'] ) ? absint( wp_unslash( $_POST['form_id'] ) ) : 0;
-	$source  = isset( $_POST['form_source'] ) && is_scalar( $_POST['form_source'] ) ? sanitize_key( wp_unslash( $_POST['form_source'] ) ) : '';
+	$action   = isset( $_POST['action'] ) && is_scalar( $_POST['action'] ) ? sanitize_key( wp_unslash( $_POST['action'] ) ) : '';
+	$form_id  = isset( $_POST['form_id'] ) && is_scalar( $_POST['form_id'] ) ? absint( wp_unslash( $_POST['form_id'] ) ) : 0;
+	$source   = isset( $_POST['form_source'] ) && is_scalar( $_POST['form_source'] ) ? sanitize_key( wp_unslash( $_POST['form_source'] ) ) : '';
 	$form_key = $form_id ? 'form-' . $form_id : $source;
 	$return_to = isset( $_POST['_alify_return_to'] ) && is_scalar( $_POST['_alify_return_to'] ) ? esc_url_raw( wp_unslash( $_POST['_alify_return_to'] ) ) : '';
 	$return_to = wp_validate_redirect( $return_to, home_url( '/' ) );
-	if ( ! in_array( $action, array( 'alify_submit_form', 'alify_submit_inquiry' ), true ) || ( 'alify_submit_form' === $action && ( ! $form_id || $source ) ) || ( 'alify_submit_inquiry' === $action && ( $form_id || ! in_array( $source, array( 'contact', 'start-project', 'homepage' ), true ) ) ) ) {
+	$valid_target = ( 'alify_submit_form' === $action && $form_id && ! $source )
+		|| ( 'alify_submit_inquiry' === $action && ! $form_id && in_array( $source, array( 'contact', 'start-project', 'homepage' ), true ) );
+	if ( ! $valid_target ) {
 		wp_die( esc_html__( 'Invalid form configuration.', 'alify' ), '', array( 'response' => 400 ) );
+	}
+
+	$nonce = isset( $_POST['alify_nonce'] ) && is_scalar( $_POST['alify_nonce'] ) ? sanitize_text_field( wp_unslash( $_POST['alify_nonce'] ) ) : '';
+	if ( ! wp_verify_nonce( $nonce, 'alify_public_form' ) ) {
+		wp_safe_redirect( add_query_arg( array( 'form_status' => 'error', 'form_key' => $form_key, 'form_error' => 'expired' ), $return_to ) );
+		exit;
 	}
 
 	// Honeypot submissions are silently accepted but never stored or emailed.
@@ -563,7 +694,8 @@ function alify_handle_public_form_submission() {
 		$clean_data = alify_validate_source_inquiry( $source, $_POST );
 	}
 	if ( is_wp_error( $clean_data ) ) {
-		wp_safe_redirect( add_query_arg( array( 'form_status' => 'error', 'form_key' => $form_key ), $return_to ) );
+		$error_code = sanitize_key( $clean_data->get_error_code() );
+		wp_safe_redirect( add_query_arg( array( 'form_status' => 'error', 'form_key' => $form_key, 'form_error' => $error_code ), $return_to ) );
 		exit;
 	}
 
@@ -571,7 +703,7 @@ function alify_handle_public_form_submission() {
 	$rate_key = 'alify_form_rate_' . md5( wp_salt( 'auth' ) . $ip . $form_key );
 	$count    = absint( get_transient( $rate_key ) );
 	if ( $count >= 5 ) {
-		wp_safe_redirect( add_query_arg( array( 'form_status' => 'error', 'form_key' => $form_key ), $return_to ) );
+		wp_safe_redirect( add_query_arg( array( 'form_status' => 'error', 'form_key' => $form_key, 'form_error' => 'rate_limit' ), $return_to ) );
 		exit;
 	}
 	set_transient( $rate_key, $count + 1, 15 * MINUTE_IN_SECONDS );
@@ -603,8 +735,8 @@ function alify_handle_public_form_submission() {
 	update_post_meta( $entry_id, '_alify_form_data', $clean_data );
 
 	$recipient = $form_post ? alify_get_form_option( $form_id, 'notification_recipient' ) : '';
-	if ( ! $recipient && function_exists( 'get_field' ) ) {
-		$recipient = get_field( 'forms_notification_email', 'option' );
+	if ( ! $recipient && function_exists( 'alify_get_forms_setting' ) ) {
+		$recipient = alify_get_forms_setting( 'forms_notification_email' );
 	}
 	if ( ! $recipient && function_exists( 'get_field' ) ) {
 		$recipient = get_field( 'contact_email', 'option' );

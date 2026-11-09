@@ -193,28 +193,8 @@ function alify_register_acf_fields() {
 		)
 	);
 
-	acf_add_local_field_group(
-		array(
-			'key' => 'group_alify_form_definition',
-			'title' => __( 'Form Definition', 'alify' ),
-			'fields' => array(
-				array( 'key' => 'field_alify_form_fields', 'label' => __( 'Fields', 'alify' ), 'name' => 'form_fields', 'type' => 'repeater', 'layout' => 'row', 'button_label' => __( 'Add Form Field', 'alify' ), 'sub_fields' => array(
-					array( 'key' => 'field_alify_form_field_label', 'label' => __( 'Label', 'alify' ), 'name' => 'label', 'type' => 'text', 'required' => 1 ),
-					array( 'key' => 'field_alify_form_field_name', 'label' => __( 'Field Name', 'alify' ), 'name' => 'field_name', 'type' => 'text', 'required' => 1, 'instructions' => __( 'Use a unique name such as first_name. Internal names like action, form_id, privacyConsent, and alify_nonce are reserved.', 'alify' ) ),
-					array( 'key' => 'field_alify_form_field_type', 'label' => __( 'Field Type', 'alify' ), 'name' => 'field_type', 'type' => 'select', 'choices' => array( 'text' => 'Text', 'email' => 'Email', 'tel' => 'Phone', 'url' => 'URL', 'textarea' => 'Textarea', 'select' => 'Select', 'checkbox' => 'Checkbox', 'radio' => 'Radio' ), 'default_value' => 'text', 'ui' => 1 ),
-					array( 'key' => 'field_alify_form_field_required', 'label' => __( 'Required', 'alify' ), 'name' => 'required', 'type' => 'true_false', 'ui' => 1 ),
-					array( 'key' => 'field_alify_form_field_options', 'label' => __( 'Options (one per line; use Label|value for custom values)', 'alify' ), 'name' => 'options', 'type' => 'textarea', 'rows' => 3 ),
-				) ),
-				array( 'key' => 'field_alify_form_template', 'label' => __( 'Use Form Template', 'alify' ), 'name' => 'form_template', 'type' => 'post_object', 'post_type' => array( 'alify_form_template' ), 'return_format' => 'id', 'ui' => 1, 'instructions' => __( 'Select a reusable form template. The form uses its field list when this form has no fields of its own.', 'alify' ) ),
-				array( 'key' => 'field_alify_form_recipient', 'label' => __( 'Notification Recipient', 'alify' ), 'name' => 'notification_recipient', 'type' => 'email' ),
-				array( 'key' => 'field_alify_form_success', 'label' => __( 'Success Message', 'alify' ), 'name' => 'success_message', 'type' => 'textarea', 'rows' => 3 ),
-			),
-			'location' => array(
-				array( array( 'param' => 'post_type', 'operator' => '==', 'value' => 'alify_form' ) ),
-				array( array( 'param' => 'post_type', 'operator' => '==', 'value' => 'alify_form_template' ) ),
-			),
-			'active' => true,
-		)
-	);
+	// Form definitions and templates use the native field builder in inc/forms-admin.php.
+	// It stores the same form_fields and form_template metadata used by the renderer,
+	// so forms remain editable without ACF Pro and avoid duplicate builder interfaces.
 }
 add_action( 'acf/init', 'alify_register_acf_fields' );

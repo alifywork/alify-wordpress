@@ -7,7 +7,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'ALIFY_THEME_VERSION', '1.0.1' );
+define( 'ALIFY_THEME_VERSION', '1.0.2' );
 define( 'ALIFY_THEME_DIR', get_template_directory() );
 define( 'ALIFY_THEME_URI', get_template_directory_uri() );
 
@@ -16,6 +16,7 @@ require_once ALIFY_THEME_DIR . '/inc/content-types.php';
 require_once ALIFY_THEME_DIR . '/inc/taxonomies.php';
 require_once ALIFY_THEME_DIR . '/inc/acf.php';
 require_once ALIFY_THEME_DIR . '/inc/forms.php';
+require_once ALIFY_THEME_DIR . '/inc/forms-admin.php';
 require_once ALIFY_THEME_DIR . '/inc/forms-export.php';
 require_once ALIFY_THEME_DIR . '/inc/frontend.php';
 require_once ALIFY_THEME_DIR . '/inc/editor.php';
