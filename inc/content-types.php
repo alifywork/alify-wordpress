@@ -85,7 +85,14 @@ function alify_register_admin_post_type( $slug, $plural, $singular, $icon, $hier
 			'read_private_posts', 'delete_posts', 'delete_private_posts', 'delete_published_posts',
 			'delete_others_posts', 'edit_private_posts', 'edit_published_posts', 'create_posts',
 		);
-		$args['capabilities'] = array_fill_keys( $admin_caps, 'manage_options' );
+		$admin_capabilities = array_fill_keys( $admin_caps, 'manage_options' );
+		// Give each post type unique meta-capability names instead of mapping
+		// edit_post/read_post/delete_post directly to the global manage_options cap;
+		// that avoids collisions in WordPress' core capability mapping.
+		$admin_capabilities['edit_post']   = 'edit_' . $slug;
+		$admin_capabilities['read_post']   = 'read_' . $slug;
+		$admin_capabilities['delete_post'] = 'delete_' . $slug;
+		$args['capabilities'] = $admin_capabilities;
 	}
 
 	register_post_type( $slug, $args );
