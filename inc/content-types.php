@@ -55,44 +55,47 @@ add_action( 'init', 'alify_register_content_types' );
 
 /** Register an internal, non-public content type for the form admin area. */
 function alify_register_admin_post_type( $slug, $plural, $singular, $icon, $hierarchical ) {
-	$args = array(
-			'labels' => array(
-				'name'          => $plural,
-				'singular_name' => $singular,
-				'add_new_item'  => sprintf( __( 'Add New %s', 'alify' ), $singular ),
-				'edit_item'     => sprintf( __( 'Edit %s', 'alify' ), $singular ),
-				'all_items'     => sprintf( __( 'All %s', 'alify' ), $plural ),
-			),
-			'public'          => false,
-			'show_ui'         => true,
-			'show_in_menu'    => true,
-			// Keep internal form definitions and submissions out of the public REST API.
-			'show_in_rest'    => false,
-			'publicly_queryable' => false,
-			'exclude_from_search' => true,
-			'has_archive'     => false,
-			'hierarchical'    => $hierarchical,
-			'menu_icon'       => $icon,
-			'supports'        => array( 'title', 'editor', 'revisions', 'custom-fields' ),
-			'map_meta_cap'    => true,
+	$is_primary_form_menu = 'alify_form' === $slug;
+	$args                 = array(
+		'labels' => array(
+			'name'          => $plural,
+			'menu_name'     => $plural,
+			'singular_name' => $singular,
+			'add_new_item'  => sprintf( __( 'Add New %s', 'alify' ), $singular ),
+			'edit_item'     => sprintf( __( 'Edit %s', 'alify' ), $singular ),
+			'all_items'     => sprintf( __( 'All %s', 'alify' ), $plural ),
+		),
+		'public'                => false,
+		'show_ui'               => true,
+		// Keep reusable form definitions and private submissions together under Forms.
+		'show_in_menu'          => $is_primary_form_menu ? true : 'edit.php?post_type=alify_form',
+		// Keep internal form definitions and submissions out of the public REST API.
+		'show_in_rest'          => false,
+		'publicly_queryable'    => false,
+		'exclude_from_search'   => true,
+		'has_archive'           => false,
+		'hierarchical'          => $hierarchical,
+		'menu_icon'             => $icon,
+		'supports'              => array( 'title', 'revisions' ),
+		'map_meta_cap'          => true,
 	);
 
 	if ( in_array( $slug, array( 'alify_form', 'alify_form_template', 'alify_form_entry' ), true ) ) {
 		// Form definitions control where inquiries are sent; entries contain personal information.
 		// Restrict these post types to administrators to prevent unauthorized form changes or data exfiltration.
 		$admin_caps = array(
-			'edit_post', 'read_post', 'delete_post', 'edit_posts', 'edit_others_posts', 'publish_posts',
-			'read_private_posts', 'delete_posts', 'delete_private_posts', 'delete_published_posts',
-			'delete_others_posts', 'edit_private_posts', 'edit_published_posts', 'create_posts',
+			'edit_posts', 'edit_others_posts', 'publish_posts', 'read_private_posts', 'delete_posts',
+			'delete_private_posts', 'delete_published_posts', 'delete_others_posts',
+			'edit_private_posts', 'edit_published_posts', 'create_posts',
 		);
 		$admin_capabilities = array_fill_keys( $admin_caps, 'manage_options' );
-		// Give each post type unique meta-capability names instead of mapping
-		// edit_post/read_post/delete_post directly to the global manage_options cap;
-		// that avoids collisions in WordPress' core capability mapping.
-		$admin_capabilities['edit_post']   = 'edit_' . $slug;
-		$admin_capabilities['read_post']   = 'read_' . $slug;
-		$admin_capabilities['delete_post'] = 'delete_' . $slug;
-		$args['capabilities'] = $admin_capabilities;
+		// Keep WordPress' recognized meta-capability names. Only the primitive
+		// capabilities should resolve to manage_options; mapping a meta cap there
+		// can interfere with core authorization checks.
+		$admin_capabilities['edit_post']   = 'edit_post';
+		$admin_capabilities['read_post']   = 'read_post';
+		$admin_capabilities['delete_post'] = 'delete_post';
+		$args['capabilities']              = $admin_capabilities;
 	}
 
 	register_post_type( $slug, $args );

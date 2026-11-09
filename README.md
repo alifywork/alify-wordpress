@@ -38,7 +38,7 @@ The importer extracts each source page hero and main body into the WordPress edi
 
 - The homepage, Contact, and Start Project inquiry forms submit to WordPress and save validated submissions as private Form Entries. Contact and Start Project retain their on-page review step; the homepage form includes a privacy-consent checkbox and direct submission.
 - Submissions include a nonce, required-field/email/URL validation, privacy consent, honeypot, and basic per-IP rate limiting. Notifications use `wp_mail()` and the configured Forms notification email (or WordPress admin email).
-- Create reusable forms under **Forms**, configure fields in ACF Pro, then place `[alify_form id="123"]` in page content or an ACF text section. A Form Template can provide its field list.
+- Create forms and reusable templates from the grouped **Forms** dashboard menu. Configure fields in ACF Pro, then place `[alify_form id="123"]` in page content or an ACF text section. A Form Template can provide its field list.
 - View submissions under **Form Entries**; entry access and CSV export are restricted to users with the site administrator capability. Export from **Form Entries → Export CSV**. The export contains personal information; handle it securely.
 - Serve forms over HTTPS and configure SMTP in production; `wp_mail()` delivery depends on the WordPress host. Submissions are still stored as entries if mail delivery fails.
 - CRM delivery, file attachments, production-grade bot protection, and submission monitoring require deployment-specific services and configuration; the theme does not claim these are enabled.
